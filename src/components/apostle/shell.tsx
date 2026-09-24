@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { GROK_PROVIDERS, signIn } from "@/lib/auth/client";
 import { SignInGate, UserButton } from "@/lib/auth/gates";
+import { EmailAuthForm } from "@/components/apostle/email-auth-form";
 
 function Gate() {
   return (
@@ -21,6 +22,7 @@ function Gate() {
             </button>
           ))}
         </div>
+        <EmailAuthForm />
       </div>
     </main>
   );

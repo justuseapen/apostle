@@ -145,7 +145,9 @@ function Chat() {
                   <p className="font-display text-4xl leading-tight">What should this assistant do?</p>
                   <p className="mt-3 max-w-md text-mute">
                     Apostle is the install. The desk is where you change the voice and turn plugins on.
-                    Try “what time is it in Aberdeen?” or paste a public https link.
+                    Try “what time is it in Aberdeen?”, paste a public https link, or ask it to
+                    calculate something. Set the model key on the desk if chat says the gateway is
+                    missing.
                   </p>
                 </div>
               )}

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Apostle",
+      "hasCanvas": false,
+      "bodyTextLen": 197,
+      "bodyTextHash": "d7f212d762a5b87ca714f7689e96bc59745041848d192bc67e629ebe13d2b601",
+      "bodyTextPrefix": "Apostle A chat you install. Plugins you switch on. Continue with",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/mvp-gateway.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Apostle",
+      "hasCanvas": false,
+      "bodyTextLen": 197,
+      "bodyTextHash": "d7f212d762a5b87ca714f7689e96bc59745041848d192bc67e629ebe13d2b601",
+      "bodyTextPrefix": "Apostle A chat you install. Plugins you switch on. Continue with",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/mvp-gateway-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/mvp-gateway.json"
+}

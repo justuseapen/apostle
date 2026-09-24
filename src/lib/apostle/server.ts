@@ -1,6 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import {
+  catalogPlugins,
+  installedCapabilityBlurb,
+  isKnownPluginId,
+  runPluginTool,
+  toolsFor,
+} from "@/lib/apostle/plugins";
+import {
+  maskKey,
+  normalizeBaseUrl,
+  resolveGateway as resolveGatewayConfig,
+  type GatewayResolved,
+} from "@/lib/apostle/gateway";
 
 export type ThreadRow = { id: string; title: string; created_at: string };
 export type MessageRow = {
@@ -15,6 +28,8 @@ export type SettingsRow = {
   plugins: string;
   model_map: string;
   enforce_quota: boolean;
+  gateway_base_url: string;
+  gateway_api_key: string;
 };
 export type UsageRow = {
   id: string;
@@ -27,42 +42,6 @@ export type UsageRow = {
 
 const DEFAULT_PROMPT =
   "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it.";
-
-const PLUGINS = [
-  {
-    id: "get_time",
-    name: "Clock",
-    blurb: "Current time in a timezone.",
-    tool: {
-      type: "function" as const,
-      function: {
-        name: "get_time",
-        description: "Return the current time in an IANA timezone. Default America/New_York.",
-        parameters: {
-          type: "object",
-          properties: { timezone: { type: "string" } },
-        },
-      },
-    },
-  },
-  {
-    id: "fetch_page",
-    name: "Page fetch",
-    blurb: "Read a public https page as text.",
-    tool: {
-      type: "function" as const,
-      function: {
-        name: "fetch_page",
-        description: "Fetch a public https URL and return readable text. No logins, no localhost.",
-        parameters: {
-          type: "object",
-          properties: { url: { type: "string" } },
-          required: ["url"],
-        },
-      },
-    },
-  },
-] as const;
 
 type Label = "cheap" | "default" | "strong" | "vision";
 
@@ -116,6 +95,14 @@ function parseMap(raw: string | null): Record<Label, string> {
   }
 }
 
+function resolveGateway(settings: SettingsRow): GatewayResolved {
+  return resolveGatewayConfig({
+    gateway_base_url: settings.gateway_base_url,
+    gateway_api_key: settings.gateway_api_key,
+    envKey: process.env.XAI_API_KEY,
+  });
+}
+
 async function ensureSettings(userId: string) {
   const sql = await getSql();
   await sql`
@@ -123,10 +110,25 @@ async function ensureSettings(userId: string) {
     on conflict (user_id) do nothing
   `;
   const rows = await sql<SettingsRow>`
-    select system_prompt, plugins, model_map, enforce_quota
+    select system_prompt, plugins, model_map, enforce_quota,
+           gateway_base_url, gateway_api_key
     from settings where user_id = ${userId}
   `;
   return rows[0];
+}
+
+async function chatCompletions(
+  gateway: GatewayResolved,
+  body: Record<string, unknown>,
+): Promise<Response> {
+  return fetch(`${gateway.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${gateway.apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 export const listThreads = createServerFn({ method: "GET" })
@@ -167,12 +169,24 @@ export const getDesk = createServerFn({ method: "GET" })
       select count(*)::int as n from messages
       where user_id = ${context.userId} and role = 'user'
     `;
+    const gateway = resolveGateway(settings);
     return {
-      settings,
+      settings: {
+        system_prompt: settings.system_prompt,
+        plugins: settings.plugins,
+        model_map: settings.model_map,
+        enforce_quota: settings.enforce_quota,
+        gateway_base_url: normalizeBaseUrl(settings.gateway_base_url),
+      },
       usage,
       userMessages: counts[0]?.n ?? 0,
-      catalog: PLUGINS.map((p) => ({ id: p.id, name: p.name, blurb: p.blurb })),
-      gateway: process.env.XAI_API_KEY ? "grok" : "missing",
+      catalog: catalogPlugins(),
+      gateway: {
+        live: gateway.source !== "none",
+        source: gateway.source,
+        baseUrl: gateway.baseUrl,
+        keyHint: gateway.source === "desk" ? maskKey(gateway.apiKey) : "",
+      },
     };
   });
 
@@ -183,101 +197,55 @@ export const saveDesk = createServerFn({ method: "POST" })
     plugins: string[];
     model_map: Record<string, string>;
     enforce_quota: boolean;
+    gateway_base_url: string;
+    /** Non-empty replaces desk key. Empty keeps existing. "__clear__" removes desk key. */
+    gateway_api_key: string;
   }) => input)
   .handler(async ({ context, data }) => {
     const sql = await getSql();
-    const allowed = new Set(PLUGINS.map((p) => p.id));
-    const plugins = data.plugins.filter((id) => allowed.has(id as (typeof PLUGINS)[number]["id"]));
+    const plugins = data.plugins.filter((id) => isKnownPluginId(id));
     const map = parseMap(JSON.stringify(data.model_map));
+    const baseUrl = normalizeBaseUrl(data.gateway_base_url);
+    const keyInput = (data.gateway_api_key ?? "").trim();
+
+    const current = await ensureSettings(context.userId);
+    let nextKey = current.gateway_api_key ?? "";
+    if (keyInput === "__clear__") nextKey = "";
+    else if (keyInput) nextKey = keyInput.slice(0, 512);
+
     await sql`
-      insert into settings (user_id, system_prompt, plugins, model_map, enforce_quota)
+      insert into settings (
+        user_id, system_prompt, plugins, model_map, enforce_quota,
+        gateway_base_url, gateway_api_key
+      )
       values (
         ${context.userId},
         ${data.system_prompt.slice(0, 4000)},
         ${JSON.stringify(plugins)},
         ${JSON.stringify(map)},
-        ${data.enforce_quota}
+        ${data.enforce_quota},
+        ${baseUrl},
+        ${nextKey}
       )
       on conflict (user_id) do update set
         system_prompt = excluded.system_prompt,
         plugins = excluded.plugins,
         model_map = excluded.model_map,
-        enforce_quota = excluded.enforce_quota
+        enforce_quota = excluded.enforce_quota,
+        gateway_base_url = excluded.gateway_base_url,
+        gateway_api_key = excluded.gateway_api_key
     `;
     return { ok: true as const };
   });
 
 type ToolTrace = { name: string; args: string; result: string };
 
-function blockedHost(hostname: string) {
-  const h = hostname.toLowerCase();
-  return (
-    h === "localhost" ||
-    h.endsWith(".local") ||
-    h === "0.0.0.0" ||
-    h.startsWith("127.") ||
-    h.startsWith("10.") ||
-    h.startsWith("192.168.") ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)
-  );
-}
-
-async function runTool(name: string, rawArgs: string): Promise<string> {
-  let args: Record<string, string> = {};
-  try {
-    args = JSON.parse(rawArgs || "{}") as Record<string, string>;
-  } catch {
-    args = {};
-  }
-  if (name === "get_time") {
-    const tz = args.timezone || "America/New_York";
-    try {
-      return new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        dateStyle: "full",
-        timeStyle: "long",
-      }).format(new Date());
-    } catch {
-      return `Unknown timezone: ${tz}`;
-    }
-  }
-  if (name === "fetch_page") {
-    let url: URL;
-    try {
-      url = new URL(args.url || "");
-    } catch {
-      return "That is not a URL.";
-    }
-    if (url.protocol !== "https:" || blockedHost(url.hostname)) {
-      return "Only public https pages are allowed.";
-    }
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
-    try {
-      const res = await fetch(url, {
-        signal: ctrl.signal,
-        headers: { "User-Agent": "Apostle/0.1" },
-        redirect: "follow",
-      });
-      const text = await res.text();
-      const stripped = text
-        .replace(/<script[\s\S]*?<\/script>/gi, " ")
-        .replace(/<style[\s\S]*?<\/style>/gi, " ")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 3500);
-      return `HTTP ${res.status}\n${stripped || "(empty)"}`;
-    } catch {
-      return "Could not fetch that page.";
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  return "Unknown tool.";
-}
-
-type ChatMsg = { role: "system" | "user" | "assistant" | "tool"; content: string; tool_call_id?: string; tool_calls?: unknown };
+type ChatMsg = {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string;
+  tool_call_id?: string;
+  tool_calls?: unknown;
+};
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -287,11 +255,18 @@ export const sendMessage = createServerFn({ method: "POST" })
   }))
   .handler(async ({ context, data }) => {
     if (!data.text) return { ok: false as const, error: "Write something first." };
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) return { ok: false as const, error: "The model gateway is not available in this environment." };
 
     const sql = await getSql();
     const settings = await ensureSettings(context.userId);
+    const gateway = resolveGateway(settings);
+    if (!gateway.apiKey) {
+      return {
+        ok: false as const,
+        error:
+          "No model key. Paste an OpenAI-compatible key on the desk, or set XAI_API_KEY.",
+      };
+    }
+
     if (settings.enforce_quota) {
       const counts = await sql<{ n: number }>`
         select count(*)::int as n from messages
@@ -337,7 +312,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     const map = parseMap(settings.model_map);
     const model = map[decision.label] || "grok-4.5";
     const enabled = parseList(settings.plugins);
-    const tools = PLUGINS.filter((p) => enabled.includes(p.id)).map((p) => p.tool);
+    const tools = toolsFor(enabled);
 
     const messages: ChatMsg[] = [
       {
@@ -355,19 +330,12 @@ export const sendMessage = createServerFn({ method: "POST" })
     let answer = "";
 
     for (let round = 0; round < 3; round++) {
-      const res = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          tools: tools.length ? tools : undefined,
-          max_tokens: BUDGET[decision.label],
-          temperature: 0.4,
-        }),
+      const res = await chatCompletions(gateway, {
+        model,
+        messages,
+        tools: tools.length ? tools : undefined,
+        max_tokens: BUDGET[decision.label],
+        temperature: 0.4,
       });
       if (!res.ok) {
         const errText = await res.text();
@@ -396,7 +364,7 @@ export const sendMessage = createServerFn({ method: "POST" })
         tool_calls: calls,
       });
       for (const call of calls) {
-        const result = await runTool(call.function.name, call.function.arguments);
+        const result = await runPluginTool(call.function.name, call.function.arguments);
         traces.push({ name: call.function.name, args: call.function.arguments, result });
         messages.push({
           role: "tool",
@@ -422,7 +390,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       values (${crypto.randomUUID()}, ${context.userId}, ${threadId}, ${model}, ${decision.label}, ${tokensIn}, ${tokensOut})
     `;
 
-    const gap = await noteGap(apiKey, context.userId, data.text, answer, traces.map((t) => t.name));
+    const gap = await noteGap(gateway, context.userId, data.text, answer, traces.map((t) => t.name));
 
     return {
       ok: true as const,
@@ -448,35 +416,27 @@ function slugify(title: string) {
 }
 
 async function noteGap(
-  apiKey: string,
+  gateway: GatewayResolved,
   userId: string,
   ask: string,
   answer: string,
   toolsUsed: string[],
 ): Promise<string | null> {
   try {
-    const res = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "grok-4.5",
-        temperature: 0,
-        max_tokens: 80,
-        messages: [
-          {
-            role: "system",
-            content:
-              'Installed tools: clock (get_time), public https page text (fetch_page). Reply JSON only: {"gap":null} or {"gap":"short capability name"}. Set gap only when the user wanted data or an action those tools cannot do. Greetings, opinions, and ordinary questions are null.',
-          },
-          {
-            role: "user",
-            content: `User: ${ask.slice(0, 500)}\nTools used: ${toolsUsed.join(", ") || "none"}\nAssistant: ${answer.slice(0, 400)}`,
-          },
-        ],
-      }),
+    const res = await chatCompletions(gateway, {
+      model: "grok-4.5",
+      temperature: 0,
+      max_tokens: 80,
+      messages: [
+        {
+          role: "system",
+          content: `Installed tools: ${installedCapabilityBlurb()}. Reply JSON only: {"gap":null} or {"gap":"short capability name"}. Set gap only when the user wanted data or an action those tools cannot do. Greetings, opinions, and ordinary questions are null.`,
+        },
+        {
+          role: "user",
+          content: `User: ${ask.slice(0, 500)}\nTools used: ${toolsUsed.join(", ") || "none"}\nAssistant: ${answer.slice(0, 400)}`,
+        },
+      ],
     });
     if (!res.ok) return null;
     const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
@@ -549,4 +509,3 @@ export const setGap = createServerFn({ method: "POST" })
     `;
     return { ok: true as const };
   });
-

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { EmailAuthForm } from "@/components/apostle/email-auth-form";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -25,6 +26,7 @@ function Login() {
             <p className="text-sm text-mute">Sign-in is off.</p>
           )}
         </div>
+        {authEnabled && <EmailAuthForm />}
       </div>
     </main>
   );

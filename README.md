@@ -21,24 +21,25 @@ The model sits behind one OpenAI-compatible gateway. This build talks to Grok. T
 
 - Threads, streaming-style replies, and a per-user history.
 - Sign-in, so threads and desk settings belong to the operator.
-- Two plugins: clock, and fetch of a public https page.
+- A desk-owned gateway: base URL + API key (OpenAI-compatible). Falls back to `XAI_API_KEY` when the desk key is empty.
+- A frozen plugin contract under `src/lib/apostle/plugins/` — register a plugin there; do not edit the harness.
+- Three plugins: clock, public https page fetch, and calculator.
 - A model map and a token log.
 - An optional free-plan cap (40 messages) so a paid plan has something to lift.
 - **Missing.** If a person asks for a capability the installed tools cannot do, the ask is logged with a count. Start it, dismiss it, or mark it done.
 
 ## Roadmap
 
-**Now.** Make the gateway a setting (OpenRouter key, base URL, model map) instead of a hardcoded host. Freeze the plugin contract so a third plugin does not require editing the harness.
+**Now.** Billing. Plans, a Stripe plugin, usage against the plan, margin on the desk.
 
 **Next.** The things a ChatGPT-shaped product is naked without:
 
-1. Billing. Plans, a Stripe plugin, usage against the plan, margin on the desk.
-2. Users who are not the operator. Invite link, quota, their own threads.
-3. Computer. A jailed shell and files, as a plugin, default deny on the network.
-4. Knowledge. Upload a corpus, retrieve it, cite it.
-5. Memory. Facts about a person, separate from the corpus.
-6. Browser. A page inside the same cage, with an allowlist.
-7. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it.
+1. Users who are not the operator. Invite link, quota, their own threads.
+2. Computer. A jailed shell and files, as a plugin, default deny on the network.
+3. Knowledge. Upload a corpus, retrieve it, cite it.
+4. Memory. Facts about a person, separate from the corpus.
+5. Browser. A page inside the same cage, with an allowlist.
+6. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it.
 
 **Later.** A theme you can swap without forking core. A catalog of plugins. Background runs that finish after the tab closes. Channels besides the web.
 
@@ -57,7 +58,7 @@ Open `http://localhost:8080`.
 
 Without `DATABASE_URL`, data lives in an embedded Postgres that resets when the process stops. Set `DATABASE_URL` for anything you want to keep.
 
-Sign-in is Google or X through the hosted broker. If that redirect is refused on your machine, email-and-password is the local fallback (`src/lib/auth/email-password.ts`).
+Sign-in is Google or X through the hosted broker. Email-and-password is also on (`src/lib/auth/email-password.ts`) for local installs when that redirect is refused.
 
 ## Where the code is
 
@@ -65,7 +66,8 @@ Sign-in is Google or X through the hosted broker. If that redirect is refused on
 |---|---|
 | `src/routes/index.tsx` | Chat |
 | `src/routes/admin.tsx` | Desk |
-| `src/lib/apostle/server.ts` | Gateway, plugins, router, missing-ask log |
+| `src/lib/apostle/server.ts` | Gateway call, router, missing-ask log |
+| `src/lib/apostle/plugins/` | Frozen plugin contract + registry |
 | `migrations/` | Schema. Add the next number. Do not edit an applied file. |
 
 ## Law

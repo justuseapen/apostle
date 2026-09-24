@@ -7,41 +7,68 @@ export const Route = createFileRoute("/admin")({ component: Desk });
 
 const LABELS = ["cheap", "default", "strong", "vision"] as const;
 
+type GatewayInfo = {
+  live: boolean;
+  source: "desk" | "env" | "none";
+  baseUrl: string;
+  keyHint: string;
+};
+
 function Desk() {
   const [prompt, setPrompt] = useState("");
   const [plugins, setPlugins] = useState<string[]>([]);
-  const [catalog, setCatalog] = useState<{ id: string; name: string; blurb: string }[]>([]);
+  const [catalog, setCatalog] = useState<
+    { id: string; name: string; blurb: string; needs?: { network: string[]; secrets: string[]; approval: boolean } }[]
+  >([]);
   const [map, setMap] = useState<Record<string, string>>({});
   const [quota, setQuota] = useState(false);
   const [usage, setUsage] = useState<
     { id: string; model: string; label: string; tokens_in: number; tokens_out: number }[]
   >([]);
   const [count, setCount] = useState(0);
-  const [gateway, setGateway] = useState("");
+  const [gateway, setGateway] = useState<GatewayInfo | null>(null);
+  const [baseUrl, setBaseUrl] = useState("https://api.x.ai/v1");
+  const [apiKeyDraft, setApiKeyDraft] = useState("");
+  const [clearKey, setClearKey] = useState(false);
   const [note, setNote] = useState("");
   const [gaps, setGaps] = useState<GapRow[]>([]);
 
+  async function reload() {
+    const desk = await getDesk();
+    setPrompt(desk.settings.system_prompt);
+    setPlugins(JSON.parse(desk.settings.plugins) as string[]);
+    setMap(JSON.parse(desk.settings.model_map) as Record<string, string>);
+    setQuota(desk.settings.enforce_quota);
+    setBaseUrl(desk.settings.gateway_base_url);
+    setCatalog(desk.catalog);
+    setUsage(desk.usage);
+    setCount(desk.userMessages);
+    setGateway(desk.gateway);
+    setGaps(await listGaps());
+    setApiKeyDraft("");
+    setClearKey(false);
+  }
+
   useEffect(() => {
-    getDesk()
-      .then(async (desk) => {
-        setPrompt(desk.settings.system_prompt);
-        setPlugins(JSON.parse(desk.settings.plugins) as string[]);
-        setMap(JSON.parse(desk.settings.model_map) as Record<string, string>);
-        setQuota(desk.settings.enforce_quota);
-        setCatalog(desk.catalog);
-        setUsage(desk.usage);
-        setCount(desk.userMessages);
-        setGateway(desk.gateway);
-        setGaps(await listGaps());
-      })
-      .catch(() => setNote("Could not open the desk."));
+    reload().catch(() => setNote("Could not open the desk."));
   }, []);
 
   async function save() {
     setNote("");
+    let gateway_api_key = "";
+    if (clearKey) gateway_api_key = "__clear__";
+    else if (apiKeyDraft.trim()) gateway_api_key = apiKeyDraft.trim();
     await saveDesk({
-      data: { system_prompt: prompt, plugins, model_map: map, enforce_quota: quota },
+      data: {
+        system_prompt: prompt,
+        plugins,
+        model_map: map,
+        enforce_quota: quota,
+        gateway_base_url: baseUrl,
+        gateway_api_key,
+      },
     });
+    await reload();
     setNote("Saved.");
   }
 
@@ -49,17 +76,72 @@ function Desk() {
     setPlugins((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   }
 
+  const gatewayLine = !gateway
+    ? "Loading gateway…"
+    : gateway.live
+      ? gateway.source === "desk"
+        ? `Gateway live · desk key ${gateway.keyHint} · ${gateway.baseUrl}`
+        : `Gateway live · env XAI_API_KEY · ${gateway.baseUrl}`
+      : "Gateway unavailable — paste a key below, or set XAI_API_KEY.";
+
   return (
     <Shell desk>
       <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8">
         <div>
           <h1 className="font-display text-4xl">Desk</h1>
           <p className="mt-2 text-mute">
-            Gateway {gateway === "grok" ? "is live on Grok." : "is unavailable."} The router
-            picks cheap, default, strong, or vision before each reply. Jev can sit in that slot
-            later; this build uses the same four questions locally.
+            {gatewayLine} The router picks cheap, default, strong, or vision before each reply.
           </p>
         </div>
+
+        <section>
+          <h2 className="font-display text-2xl">Gateway</h2>
+          <p className="mt-1 text-sm text-mute">
+            Any OpenAI-compatible endpoint: Grok, OpenRouter, Ollama, and the rest. Leave the key
+            blank on save to keep the current one.
+          </p>
+          <label className="mt-3 flex flex-col gap-1 text-sm">
+            <span>Base URL</span>
+            <input
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder="https://api.x.ai/v1"
+              className="h-12 rounded-full border border-line bg-bone px-4 outline-none"
+            />
+          </label>
+          <label className="mt-3 flex flex-col gap-1 text-sm">
+            <span>API key</span>
+            <input
+              type="password"
+              value={apiKeyDraft}
+              onChange={(e) => {
+                setApiKeyDraft(e.target.value);
+                setClearKey(false);
+              }}
+              placeholder={
+                gateway?.keyHint
+                  ? `Saved ${gateway.keyHint} — paste to replace`
+                  : gateway?.source === "env"
+                    ? "Using env — paste a desk key to override"
+                    : "Paste your model key"
+              }
+              className="h-12 rounded-full border border-line bg-bone px-4 outline-none"
+              autoComplete="off"
+            />
+          </label>
+          {gateway?.source === "desk" && (
+            <button
+              type="button"
+              onClick={() => {
+                setClearKey(true);
+                setApiKeyDraft("");
+              }}
+              className="mt-2 h-10 self-start rounded-full border border-line px-4 text-sm"
+            >
+              {clearKey ? "Key will clear on save" : "Clear desk key"}
+            </button>
+          )}
+        </section>
 
         <label className="flex flex-col gap-2">
           <span className="text-sm">Voice</span>

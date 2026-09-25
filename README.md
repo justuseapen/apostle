@@ -30,20 +30,46 @@ The model sits behind one OpenAI-compatible gateway. This build talks to Grok. T
 
 ## Roadmap
 
-**Now.** Billing. Plans, a Stripe plugin, usage against the plan, margin on the desk.
+Sequenced against what a ChatGPT-shaped product needs — and against enterprise buy-in asks (sovereign chat + harness + sandbox, human approval, data plane). Gaps stay honest; nothing below is marked done unless it ships.
 
-**Next.** The things a ChatGPT-shaped product is naked without:
+**Now**
+
+1. Billing. Plans, a Stripe plugin, usage against the plan, margin on the desk.
+2. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin.
+
+**Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
 1. Users who are not the operator. Invite link, quota, their own threads.
-2. Computer. A jailed shell and files, as a plugin, default deny on the network.
-3. Knowledge. Upload a corpus, retrieve it, cite it.
-4. Memory. Facts about a person, separate from the corpus.
-5. Browser. A page inside the same cage, with an allowlist.
-6. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it.
+2. Computer. A jailed shell and files, as a plugin, default deny on the network. (Enterprise P1 — workspace computer / Firecracker-class isolation.)
+3. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
+4. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
+5. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
+6. Browser. A page inside the same cage, with an allowlist + screenshot trail. (Enterprise P2.)
+7. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
+8. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
 
-**Later.** A theme you can swap without forking core. A catalog of plugins. Background runs that finish after the tab closes. Channels besides the web.
+**Later**
 
-Not on the list until the above is dull: desktop control, WhatsApp, a workflow canvas, a new model.
+- Theme catalog beyond the private skins above.
+- Plugin catalog.
+- Background runs that finish after the tab closes; subagents; spend caps per run/team. (Enterprise P3.)
+- Admin audit log UI spanning approvals, tool use, and overflow. (Enterprise P3 control plane.)
+- Observability traces (cost, runs) — Langfuse-class, replaceable.
+- Channels besides the web.
+- MCP tool bus as the standard plugin port (search, mail, browser, repo, internal APIs).
+
+**Spike / research (not ship commitments)**
+
+- 30-day architecture spike: browser isolation + data residency guarantees.
+- Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime).
+
+**Future / deferred (enterprise P4 — direction only)**
+
+- Desktop computer-use VM.
+- Distribution onto a customer’s existing surfaces (e.g. TMTG product embedding).
+
+Not on the list until the above is dull: WhatsApp, a workflow canvas, a new model as the product.
+
 
 ## Run it
 
@@ -57,6 +83,8 @@ XAI_API_KEY=your-key npm run dev
 ```
 
 Open `http://localhost:8080`. Sign in → **DESK** (`/admin`) → paste base URL + API key → Save → chat.
+
+Private Super Intelligence skin (does not change the public Phosphor default): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
 
 OpenRouter example: base `https://openrouter.ai/api/v1`, key from openrouter.ai/keys, model ids like `openai/gpt-4o-mini` in the model map.
 

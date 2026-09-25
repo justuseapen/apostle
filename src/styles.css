@@ -178,3 +178,88 @@ html[data-mode="dark"] .ph-scanlines {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   Super Intelligence (private) — TMTG brand board tokens.
+   Selected via data-theme="si". Does not alter Phosphor defaults.
+   Source: Buy-in design set · Brand Board (Signal / Pulse / Void / Bone).
+   ------------------------------------------------------------------ */
+html[data-theme="si"] {
+  --color-ph-void: #07070c;
+  --color-ph-tile: #0b0a18;
+  --color-ph-term: #0b0a18;
+  --color-ph-raise: #1a1830;
+  --color-ph-border: #2a2838;
+  --color-ph-line2: #3a3848;
+  --color-ph-dim: #8a8680;
+  --color-ph-mute: #a8a49c;
+  --color-ph-bone: #ede8dc;
+  --color-ph-on: #07070c;
+  --color-ph-focus: #5448ee; /* Signal — primary action / agent */
+  --color-ph-missing: #ff4775; /* Halt — blocked / policy */
+  --color-ph-tool: #2feecc; /* Pulse — live run / streaming */
+  --color-ph-scan: rgb(0 0 0 / 0.18);
+  --color-ph-warn: #f5c542; /* Warn — approval needed */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", "Inter", ui-sans-serif, sans-serif;
+  --font-marginalia: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius: 10px;
+}
+
+html[data-theme="si"][data-mode="light"] {
+  --color-ph-void: #ffffff;
+  --color-ph-tile: #f6f4ef;
+  --color-ph-term: #f6f4ef;
+  --color-ph-raise: #ebe7df;
+  --color-ph-border: #d4d0c6;
+  --color-ph-line2: #b8b3a8;
+  --color-ph-dim: #6e6a64;
+  --color-ph-mute: #4a4640;
+  --color-ph-bone: #08051b;
+  --color-ph-on: #ffffff;
+  --color-ph-focus: #5448ee;
+  --color-ph-missing: #ff4775;
+  --color-ph-tool: #0d9f8a;
+  --color-ph-scan: rgb(8 5 27 / 0.04);
+  --color-ph-warn: #c4920a;
+}
+
+html[data-theme="si"] .ph-scanlines {
+  display: none;
+}
+
+html[data-theme="si"] .phosphor {
+  font-family: var(--font-sans);
+}
+
+/* Soft radius for SI tiles/controls — Phosphor stays square via --radius: 0 */
+html[data-theme="si"] .border-2,
+html[data-theme="si"] section.border-2,
+html[data-theme="si"] button.border-2,
+html[data-theme="si"] input.border-2,
+html[data-theme="si"] textarea.border-2,
+html[data-theme="si"] select {
+  border-radius: var(--radius);
+}
+
+@keyframes si-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.si-pulse-dot {
+  animation: si-pulse 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .si-pulse-dot {
+    animation: none;
+  }
+}

@@ -4,6 +4,7 @@ import { openOnboarding } from "@/components/apostle/onboarding";
 import { PhButton, PhInput, PhTextarea, Tile, TileHead } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
 import { getDesk, listGaps, saveDesk, setGap, type GapRow } from "@/lib/apostle/server";
+import { ThemeSelect } from "@/lib/theme";
 
 export const Route = createFileRoute("/admin")({ component: Desk });
 
@@ -108,6 +109,18 @@ function Desk() {
             <PhButton tone="ghost" className="h-9 w-fit" onClick={() => openOnboarding()}>
               Setup guide
             </PhButton>
+          </div>
+        </Tile>
+
+        <Tile>
+          <TileHead left="THEME" right="LOOK · NOT HARNESS" />
+          <div className="space-y-3 px-3 py-3">
+            <p className="text-ph-dim leading-relaxed">
+              Phosphor is the public default. Super Intelligence is a private customer skin (TMTG
+              brand board). Themes never register tools. Pitch link:{" "}
+              <span className="text-ph-bone">?theme=si</span>
+            </p>
+            <ThemeSelect />
           </div>
         </Tile>
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { BrandLockup } from "@/components/apostle/brand";
 import { Tile, TileHead } from "@/components/apostle/phosphor";
 import { oauthSignInAvailable } from "@/components/apostle/sign-in-panel";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
@@ -180,9 +181,7 @@ export function Landing() {
 
       <header className="sticky top-0 z-40 border-b-2 border-ph-border bg-ph-void/95 backdrop-blur-0">
         <div className="mx-auto flex max-w-[72rem] flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2 font-mono text-[0.7rem]">
-          <span className="text-ph-bone">
-            <span className="text-ph-missing">◆</span> APOSTLE
-          </span>
+          <BrandLockup compact />
           <nav className="flex flex-wrap items-center gap-1" aria-label="Workspaces">
             {NAV.map((n) => {
               const on = active === n.id;

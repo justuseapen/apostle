@@ -31,7 +31,7 @@ Phosphor remains the public default. SI does not register tools (theme law).
 | 4b | **Better VM** (clearer sandbox / richer runtime) | Not shipped — next honest step beyond VFS builtins | **Next** | Do **not** promise Firecracker as OSS default |
 | 5 | Firecracker-class isolation proof | Not shipped | **Spike** (enterprise) | Separate from OSS browser Computer / Better VM |
 | 6 | MCP tool bus (search, mail, browser, repo, APIs) | Frozen plugin contract (clock, fetch, calculator, create_missing, **computer**, browser-in-flight) | **Later** | MCP is the intended port |
-| 7 | Allowlisted browser + screenshot trail (P2) | **Partial — in flight on #4** — Playwright + Desk allowlist + screenshot trail | **Next** (Browser) | Not desktop computer-use; residency still Spike |
+| 7 | Allowlisted browser + screenshot trail (P2) | **Partial — shipped this slice** — Browser plugin (Playwright + Desk allowlist + screenshot trail in tool cards / Context → Browser) | **Next** (Browser deepen) | Not Firecracker; sessions in-memory; desktop computer-use deferred |
 | 8 | Memory drawer (per-user, revocable) (P2) | **Partial — shell only** — right-column Memory drawer stub | **Next** (Memory) | No persistence / revoke yet |
 | 9 | Knowledge / RAG with citations (P2) | **Partial — shell only** — Knowledge drawer stub | **Next** (Knowledge) | Separate from Memory; no corpus |
 | 10 | Human approvals in protocol (P3) | **Partial — UI shell** — ApprovalCard (once / run / deny) local-only; no protocol halt | **Next** (Approvals + Jev router) | Not audited yet |

@@ -33,6 +33,7 @@ export type SettingsRow = {
   enforce_quota: boolean;
   gateway_base_url: string;
   gateway_api_key: string;
+  browser_allowlist: string;
 };
 export type UsageRow = {
   id: string;
@@ -44,7 +45,7 @@ export type UsageRow = {
 };
 
 const DEFAULT_PROMPT =
-  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it. When the user asks to file, log, or add a Missing feature/ask to the Desk roadmap, call create_missing with a short title (and optional detail). When the user wants files, a workspace, or a simple shell, use the computer tool (actions: list, read, write, run, info). Computer is a browser sandbox VFS — not the host Mac disk, not real bash.";
+  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it. When the user asks to file, log, or add a Missing feature/ask to the Desk roadmap, call create_missing with a short title (and optional detail). When the user wants files, a workspace, or a simple shell, use the computer tool (actions: list, read, write, run, info). Computer is a browser sandbox VFS — not the host Mac disk, not real bash. When the user wants to open a public page and see screenshots, use the browser tool (actions: open, snapshot, click, type, close, trail, info) — only Desk-allowlisted https hosts.";
 
 type Label = "cheap" | "default" | "strong" | "vision";
 
@@ -129,7 +130,7 @@ async function ensureSettings(userId: string) {
   `;
   const rows = await sql<SettingsRow>`
     select system_prompt, plugins, model_map, enforce_quota,
-           gateway_base_url, gateway_api_key
+           gateway_base_url, gateway_api_key, browser_allowlist
     from settings where user_id = ${userId}
   `;
   const row = rows[0];
@@ -138,6 +139,8 @@ async function ensureSettings(userId: string) {
   row.plugins = await ensurePluginEnabled(userId, row.plugins, "create_missing");
   // Soft-enable browser Computer spike for existing operators.
   row.plugins = await ensurePluginEnabled(userId, row.plugins, "computer");
+  // Soft-enable allowlisted Browser for local ops / seeded desks.
+  row.plugins = await ensurePluginEnabled(userId, row.plugins, "browser");
   return row;
 }
 
@@ -168,6 +171,22 @@ export const listThreads = createServerFn({ method: "GET" })
       from threads where user_id = ${context.userId}
       order by created_at desc
     `;
+  });
+
+/** Create an empty chat thread (verify scripts / UI helpers). */
+export const createThread = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { title?: string } = {}) => ({
+    title: (input.title || "New thread").trim().slice(0, 80) || "New thread",
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const id = crypto.randomUUID();
+    await sql`
+      insert into threads (id, user_id, title)
+      values (${id}, ${context.userId}, ${data.title})
+    `;
+    return { id, title: data.title };
   });
 
 export const listMessages = createServerFn({ method: "POST" })
@@ -205,6 +224,7 @@ export const getDesk = createServerFn({ method: "GET" })
         model_map: settings.model_map,
         enforce_quota: settings.enforce_quota,
         gateway_base_url: normalizeBaseUrl(settings.gateway_base_url),
+        browser_allowlist: settings.browser_allowlist,
       },
       usage,
       userMessages: counts[0]?.n ?? 0,
@@ -228,6 +248,8 @@ export const saveDesk = createServerFn({ method: "POST" })
     gateway_base_url: string;
     /** Non-empty replaces desk key. Empty keeps existing. "__clear__" removes desk key. */
     gateway_api_key: string;
+    /** Optional Desk Browser allowlist (JSON array string or newline hosts). */
+    browser_allowlist?: string;
   }) => input)
   .handler(async ({ context, data }) => {
     const sql = await getSql();
@@ -241,10 +263,21 @@ export const saveDesk = createServerFn({ method: "POST" })
     if (keyInput === "__clear__") nextKey = "";
     else if (keyInput) nextKey = keyInput.slice(0, 512);
 
+    const { allowlistFromLines, parseAllowlist } = await import("./browser/allowlist.ts");
+    let nextAllowlist = current.browser_allowlist;
+    if (typeof data.browser_allowlist === "string") {
+      const raw = data.browser_allowlist.trim();
+      if (raw.startsWith("[")) {
+        nextAllowlist = JSON.stringify(parseAllowlist(raw));
+      } else {
+        nextAllowlist = allowlistFromLines(raw);
+      }
+    }
+
     await sql`
       insert into settings (
         user_id, system_prompt, plugins, model_map, enforce_quota,
-        gateway_base_url, gateway_api_key
+        gateway_base_url, gateway_api_key, browser_allowlist
       )
       values (
         ${context.userId},
@@ -253,7 +286,8 @@ export const saveDesk = createServerFn({ method: "POST" })
         ${JSON.stringify(map)},
         ${data.enforce_quota},
         ${baseUrl},
-        ${nextKey}
+        ${nextKey},
+        ${nextAllowlist}
       )
       on conflict (user_id) do update set
         system_prompt = excluded.system_prompt,
@@ -261,7 +295,8 @@ export const saveDesk = createServerFn({ method: "POST" })
         model_map = excluded.model_map,
         enforce_quota = excluded.enforce_quota,
         gateway_base_url = excluded.gateway_base_url,
-        gateway_api_key = excluded.gateway_api_key
+        gateway_api_key = excluded.gateway_api_key,
+        browser_allowlist = excluded.browser_allowlist
     `;
     return { ok: true as const };
   });
@@ -608,4 +643,89 @@ export const readComputerFile = createServerFn({ method: "POST" })
     const { readFile, workspaceRef } = await import("./computer/vfs.ts");
     const content = await readFile(workspaceRef(context.userId, data.threadId), data.path);
     return { path: data.path, content };
+  });
+
+export type BrowserTrailItem = {
+  id: string;
+  url: string;
+  title: string;
+  action: string;
+  mime: string;
+  created_at: string;
+  /** Present when includeData is true. */
+  dataUrl?: string;
+};
+
+/** List Browser screenshot trail for Context → Browser drawer. */
+export const listBrowserTrail = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null; includeData?: boolean }) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+    includeData: Boolean(input.includeData),
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const { listScreenshots, getScreenshot, dataUrl } = await import("./browser/trail.ts");
+    const rows = await listScreenshots(sql, context.userId, data.threadId, 20);
+    const items: BrowserTrailItem[] = [];
+    for (const r of rows) {
+      const item: BrowserTrailItem = {
+        id: r.id,
+        url: r.url,
+        title: r.title,
+        action: r.action,
+        mime: r.mime,
+        created_at: r.created_at,
+      };
+      if (data.includeData) {
+        const full = await getScreenshot(sql, context.userId, r.id);
+        if (full) item.dataUrl = dataUrl(full.mime, full.data_base64);
+      }
+      items.push(item);
+    }
+    return { items, threadId: data.threadId };
+  });
+
+/** Fetch one screenshot as a data URL (tool card / drawer). */
+export const getBrowserScreenshot = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string }) => ({
+    id: (input.id || "").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const { getScreenshot, dataUrl } = await import("./browser/trail.ts");
+    const row = await getScreenshot(sql, context.userId, data.id);
+    if (!row) return { ok: false as const, error: "Not found." };
+    return {
+      ok: true as const,
+      id: row.id,
+      url: row.url,
+      title: row.title,
+      action: row.action,
+      dataUrl: dataUrl(row.mime, row.data_base64),
+      created_at: row.created_at,
+    };
+  });
+
+/**
+ * Run the browser plugin with the operator session (Desk / verify scripts).
+ * Does not bypass the allowlist — same path as chat tool calls.
+ */
+export const runBrowserTool = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null; args: Record<string, string> }) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+    args: input.args || {},
+  }))
+  .handler(async ({ context, data }) => {
+    const enabled = parseList((await ensureSettings(context.userId)).plugins);
+    if (!enabled.includes("browser")) {
+      return { ok: false as const, error: "Browser plugin is off. Enable it on the Desk." };
+    }
+    const result = await runPluginTool("browser", JSON.stringify(data.args), {
+      userId: context.userId,
+      threadId: data.threadId,
+    });
+    return { ok: true as const, result, threadId: data.threadId };
   });

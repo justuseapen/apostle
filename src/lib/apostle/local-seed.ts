@@ -33,6 +33,7 @@ export const LOCAL_SEED_PLUGINS = [
   "calc",
   "create_missing",
   "computer",
+  "browser",
 ] as const;
 
 export type LocalSeedResult = {

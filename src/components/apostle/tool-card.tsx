@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  SCREENSHOT_MARK_END,
+  SCREENSHOT_MARK_START,
+} from "@/lib/apostle/browser/limits.ts";
 
 type Trace = { name: string; args?: string; result: string };
 
@@ -16,13 +20,37 @@ function prettyArgs(raw?: string) {
   }
 }
 
+/** Split tool result text from embedded screenshot data-URL markers. */
+export function splitScreenshotResult(result: string): {
+  text: string;
+  preview: string | null;
+} {
+  const start = result.indexOf(SCREENSHOT_MARK_START);
+  const end = result.indexOf(SCREENSHOT_MARK_END);
+  if (start < 0 || end < 0 || end <= start) {
+    return { text: result, preview: null };
+  }
+  const preview = result
+    .slice(start + SCREENSHOT_MARK_START.length, end)
+    .trim();
+  const text = `${result.slice(0, start).trim()}\n${result.slice(end + SCREENSHOT_MARK_END.length).trim()}`.trim();
+  if (!preview.startsWith("data:image/")) {
+    return { text: result, preview: null };
+  }
+  return { text, preview };
+}
+
 /**
- * Richer tool card in chat — status chrome + args/result.
+ * Richer tool card in chat — status chrome + args/result + screenshot trail preview.
  * Not a streaming AG-UI event bus yet (TODO).
  */
 export function ToolCard({ tool }: { tool: Trace }) {
   const [open, setOpen] = useState(true);
   const args = prettyArgs(tool.args);
+  const { text, preview } = useMemo(
+    () => splitScreenshotResult(tool.result || ""),
+    [tool.result],
+  );
   return (
     <div className="mb-2 border-2 border-ph-tool bg-ph-tile">
       <button
@@ -49,8 +77,20 @@ export function ToolCard({ tool }: { tool: Trace }) {
           <pre className="overflow-x-auto whitespace-pre-wrap text-ph-bone">
             <span className="text-ph-tool">result</span>
             {"\n"}
-            {trunc(tool.result, 1200)}
+            {trunc(text, 1200)}
           </pre>
+          {preview ? (
+            <figure className="border-2 border-ph-border bg-ph-void">
+              <figcaption className="border-b-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-dim uppercase">
+                Screenshot trail
+              </figcaption>
+              <img
+                src={preview}
+                alt={`Screenshot from ${tool.name}`}
+                className="max-h-56 w-full object-contain object-top"
+              />
+            </figure>
+          ) : null}
         </div>
       )}
     </div>

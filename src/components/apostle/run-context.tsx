@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { BROWSER_LIMITS } from "@/lib/apostle/browser/limits.ts";
 import { COMPUTER_LIMITS } from "@/lib/apostle/computer/limits.ts";
 import {
   detectBrowserFs,
@@ -8,16 +9,18 @@ import {
 } from "@/lib/apostle/computer/browser-fs.ts";
 import {
   importComputerFiles,
+  listBrowserTrail,
   listComputerArtifacts,
   readComputerFile,
+  type BrowserTrailItem,
   type ComputerArtifact,
 } from "@/lib/apostle/server";
 
-type DrawerId = "artifacts" | "memory" | "knowledge" | "run";
+type DrawerId = "artifacts" | "browser" | "memory" | "knowledge" | "run";
 
 /**
  * Right-hand run context column — Hero UI fiction → real chrome stubs.
- * Artifacts now lists Computer VFS files when a thread is active.
+ * Artifacts lists Computer VFS; Browser lists screenshot trail.
  */
 export function RunContextPanel({
   toolCount = 0,
@@ -27,9 +30,9 @@ export function RunContextPanel({
 }: {
   toolCount?: number;
   showApprovalDemo?: boolean;
-  /** Active chat thread — Computer workspace is scoped per thread. */
+  /** Active chat thread — Computer workspace / Browser trail scoped per thread. */
   threadId?: string | null;
-  /** Bump after tool turns so Artifacts refreshes. */
+  /** Bump after tool turns so Artifacts / Browser refresh. */
   artifactsTick?: number;
 }) {
   const [open, setOpen] = useState<DrawerId | null>("artifacts");
@@ -44,6 +47,7 @@ export function RunContextPanel({
           [
             ["run", "Run"],
             ["artifacts", "Artifacts"],
+            ["browser", "Browser"],
             ["memory", "Memory"],
             ["knowledge", "Knowledge"],
           ] as const
@@ -86,6 +90,9 @@ export function RunContextPanel({
         {open === "artifacts" && (
           <ArtifactsDrawer threadId={threadId} tick={artifactsTick} />
         )}
+        {open === "browser" && (
+          <BrowserTrailDrawer threadId={threadId} tick={artifactsTick} />
+        )}
         {open === "memory" && (
           <PanelBlock title="Memory" hint="Per-user · revocable · ≠ RAG">
             <p className="text-ph-dim leading-relaxed">
@@ -111,6 +118,107 @@ export function RunContextPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function BrowserTrailDrawer({
+  threadId,
+  tick,
+}: {
+  threadId?: string | null;
+  tick: number;
+}) {
+  const [items, setItems] = useState<BrowserTrailItem[]>([]);
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!threadId) {
+      setItems([]);
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await listBrowserTrail({
+        data: { threadId, includeData: true },
+      });
+      setItems(res.items);
+      setStatus("");
+    } catch {
+      setStatus("Could not load screenshot trail.");
+    } finally {
+      setBusy(false);
+    }
+  }, [threadId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh, tick]);
+
+  return (
+    <PanelBlock
+      title="Browser"
+      hint="Allowlisted Playwright · screenshot trail"
+    >
+      <p className="text-ph-dim leading-relaxed">
+        Screenshots from the <span className="text-ph-tool">browser</span> tool for this
+        thread. Only Desk-allowlisted https hosts. Not a desktop computer-use agent.
+      </p>
+      <details className="mt-2 border-2 border-ph-border bg-ph-void">
+        <summary className="cursor-pointer px-2 py-1.5 text-[0.65rem] tracking-wide text-ph-warn uppercase">
+          Capabilities + limits
+        </summary>
+        <pre className="max-h-48 overflow-auto whitespace-pre-wrap px-2 py-2 text-[0.65rem] text-ph-dim leading-relaxed">
+          {BROWSER_LIMITS}
+        </pre>
+      </details>
+
+      <div className="mt-3 flex flex-wrap gap-1">
+        <button
+          type="button"
+          disabled={busy || !threadId}
+          onClick={() => void refresh()}
+          className="border-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-bone uppercase hover:border-ph-focus disabled:opacity-40"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {!threadId && (
+        <p className="mt-3 text-ph-dim">Send a message to open a thread trail.</p>
+      )}
+
+      {items.length === 0 && threadId ? (
+        <div className="mt-3 border-2 border-dashed border-ph-border px-3 py-5 text-center text-ph-dim">
+          No screenshots yet. Try <span className="text-ph-tool">/browse</span> then open
+          https://example.com via the browser tool.
+        </div>
+      ) : (
+        <ul className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto">
+          {items.map((item) => (
+            <li key={item.id} className="border-2 border-ph-border bg-ph-void">
+              <div className="border-b-2 border-ph-border px-2 py-1.5">
+                <p className="truncate text-ph-bone">{item.title || "(no title)"}</p>
+                <p className="truncate text-[0.65rem] text-ph-dim">
+                  {item.action} · {item.url}
+                </p>
+              </div>
+              {item.dataUrl ? (
+                <img
+                  src={item.dataUrl}
+                  alt={item.title || item.url}
+                  className="max-h-40 w-full object-contain object-top"
+                />
+              ) : (
+                <p className="px-2 py-3 text-ph-dim">No preview</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {status && <p className="mt-2 text-[0.65rem] text-ph-warn leading-relaxed">{status}</p>}
+    </PanelBlock>
   );
 }
 

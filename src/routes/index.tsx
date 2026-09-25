@@ -101,14 +101,23 @@ function Chat() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [messages, busy]);
 
-  // Screenshot / smoke helper: window.dispatchEvent(new CustomEvent("apostle:demo-message", { detail: { content, tools?, approval? } }))
+  // Screenshot / smoke helper: window.dispatchEvent(new CustomEvent("apostle:demo-message", { detail: { content, tools?, approval?, threadId? } }))
   useEffect(() => {
     const onDemo = (e: Event) => {
       const detail = (
-        e as CustomEvent<{ content?: string; tools?: Trace[]; approval?: boolean }>
+        e as CustomEvent<{
+          content?: string;
+          tools?: Trace[];
+          approval?: boolean;
+          threadId?: string;
+        }>
       ).detail;
       if (!detail?.content) return;
       if (detail.approval) setShowApprovalDemo(true);
+      if (detail.threadId) {
+        setActive(detail.threadId);
+        setArtifactsTick((n) => n + 1);
+      }
       setMessages((m) => [
         ...m,
         {

@@ -1,3 +1,4 @@
+import { browserPlugin } from "./plugins/browser.ts";
 import { calcPlugin } from "./plugins/calc.ts";
 import { clockPlugin } from "./plugins/clock.ts";
 import { computerPlugin } from "./plugins/computer.ts";
@@ -31,6 +32,7 @@ const INSTALLED: ApostlePlugin[] = [
   calcPlugin,
   createMissingPlugin,
   computerPlugin,
+  browserPlugin,
 ];
 
 const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prompt: string }> = {
@@ -60,6 +62,12 @@ const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prom
     aliases: ["shell", "fs", "workspace", "vfs"],
     prompt:
       "Use the computer tool (browser sandbox workspace). First call action info if unsure of limits, then list/read/write/run as needed: ",
+  },
+  browser: {
+    command: "browse",
+    aliases: ["browser", "screenshot", "web"],
+    prompt:
+      "Use the browser tool (allowlisted Playwright). Call action open with url https://example.com then snapshot. ",
   },
 };
 

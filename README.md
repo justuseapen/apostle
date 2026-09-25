@@ -48,7 +48,7 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 6. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
 7. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
 8. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
-9. Browser (**partial — shipped / in flight on this branch**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail in tool cards + Context → Browser. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
+9. Browser (**partial — shipped this slice**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail in tool cards + Context → Browser. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
 10. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
 11. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
 

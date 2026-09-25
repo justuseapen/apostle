@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "hasPlugin": true,
+  "computerListed": true,
+  "liveOk": true,
+  "trailCount": 1,
+  "hasPreview": true,
+  "shots": [
+    "browser-use-desk.png",
+    "browser-use-allowlist.png",
+    "browser-use-si.png",
+    "browser-use-slash.png",
+    "browser-use-chat.png",
+    "browser-use-trail.png",
+    "browser-use-computer-still.png"
+  ]
+}

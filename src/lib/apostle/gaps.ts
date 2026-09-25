@@ -116,7 +116,7 @@ export const ENTERPRISE_GAP_SEEDS: {
   {
     title: "Allowlisted browser trail",
     example: "Contained Chromium + domain allowlist + screenshots",
-    note: "P2 · Partial — Browser plugin (Playwright + Desk allowlist + screenshot trail) in flight; Firecracker residency still Spike",
+    note: "P2 · Partial — Browser plugin (Playwright + Desk allowlist + screenshot trail) shipped; Firecracker residency still Spike",
   },
   {
     title: "Search through threads",

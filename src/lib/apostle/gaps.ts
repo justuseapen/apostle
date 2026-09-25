@@ -106,12 +106,32 @@ export const ENTERPRISE_GAP_SEEDS: {
   {
     title: "Sandbox workspace computer",
     example: "Isolated shell + filesystem (default deny network)",
-    note: "P1 · browser Computer spike first; CLI/desktop deferred; Firecracker = enterprise Spike",
+    note: "P1 · browser Computer spike in flight; CLI/desktop deferred; Firecracker = enterprise Spike",
+  },
+  {
+    title: "Better VM",
+    example: "Clearer sandbox boundary + richer runtime beyond VFS builtins",
+    note: "Next · deepen browser Computer; do not promise Firecracker as OSS default",
   },
   {
     title: "Allowlisted browser trail",
     example: "Contained Chromium + domain allowlist + screenshots",
-    note: "P2 · couples with isolation spike",
+    note: "P2 · Partial — Browser plugin (Playwright + Desk allowlist + screenshot trail) in flight; Firecracker residency still Spike",
+  },
+  {
+    title: "Search through threads",
+    example: "Find past conversations by content or title",
+    note: "Next · ChatGPT-shaped desk hygiene",
+  },
+  {
+    title: "Thread management",
+    example: "Rename, delete, sort/reorder sidebar threads",
+    note: "Next · operator desk hygiene",
+  },
+  {
+    title: "Automations",
+    example: "Scheduled / triggered runs without a live chat turn",
+    note: "Later · audited, desk-owned",
   },
   {
     title: "Admin audit log",

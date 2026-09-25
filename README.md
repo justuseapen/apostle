@@ -23,7 +23,7 @@ The model sits behind one OpenAI-compatible gateway. This build talks to Grok. T
 - Sign-in, so threads and desk settings belong to the operator.
 - A desk-owned gateway: base URL + API key (OpenAI-compatible). Falls back to `XAI_API_KEY`, then `OPENROUTER_API_KEY`, then `OPENAI_API_KEY`.
 - A frozen plugin contract under `src/lib/apostle/plugins/` — register a plugin there; do not edit the harness.
-- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), and **Computer** (browser-sandbox VFS + constrained shell — not host FS).
+- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), **Computer** (browser-sandbox VFS + constrained shell — not host FS), and **Browser** (allowlisted Playwright + screenshot trail).
 - A model map and a token log.
 - An optional free-plan cap (40 messages) so a paid plan has something to lift.
 - **Missing.** If a person asks for a capability the installed tools cannot do, the ask is logged with a count. Start it, dismiss it, or mark it done.
@@ -34,22 +34,27 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 
 **Now**
 
-1. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin (enable-only — not a public catalog entry).
+1. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin (enable-only — not a public catalog entry). **SI stays private** — never a public catalog entry.
 2. Honest Hero chrome for enterprise buy-in: tool cards, three-column run layout, artifacts / memory / knowledge / approval shells — without pretending the backends ship.
+3. **Launch ready for OSS attention.** Concrete checklist before putting Apostle in front of open-source audiences: README polish, one-command local seed, demo path, license, screenshots, “what works / what doesn’t”, security posture for Computer/Browser, SI theme stays private. Detailed checklist lives in the Project store `docs/oss-launch-ready.md` (not a Desk Missing plugin ask).
 
 **Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
 1. Users who are not the operator. Invite link, quota, their own threads.
-2. Computer (browser-first). Jailed VFS + constrained shell as a plugin; Artifacts lists workspace files. OPFS / File System Access where the browser allows. **CLI / desktop companion deferred.** Real host shell and Firecracker-class isolation stay enterprise Spike — not this OSS default. Network remains default deny.
-3. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
-4. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
-5. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
-6. Browser. A page inside the same cage, with an allowlist + screenshot trail. (Enterprise P2.)
-7. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
-8. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
+2. **Thread management.** Rename, delete, sort/reorder the sidebar — operator hygiene for a real desk.
+3. **Search through threads.** Find past conversations by content / title without scrolling the sidebar.
+4. Computer (browser-first) — **spike shipping on this branch.** Jailed VFS + constrained shell as a plugin; Artifacts lists workspace files. OPFS / File System Access where the browser allows. **CLI / desktop companion deferred.** Network remains default deny. Real host shell stays out of the OSS default.
+5. **Better VM.** Honest next step beyond the current browser Computer VFS/builtins: clearer sandbox boundary and a richer runtime inside the browser cage. **Do not promise Firecracker as the OSS default** — Firecracker-class isolation stays enterprise Spike.
+6. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
+7. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
+8. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
+9. Browser (**partial — shipped / in flight on this branch**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail in tool cards + Context → Browser. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
+10. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
+11. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
 
 **Later**
 
+- **Automations.** Scheduled / triggered runs that act without a live chat turn (desk-owned, audited).
 - Theme catalog beyond the private skins above.
 - Plugin catalog.
 - Background runs that finish after the tab closes; subagents; spend caps per run/team. (Enterprise P3.)
@@ -61,7 +66,7 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 **Spike / research (not ship commitments)**
 
 - 30-day architecture spike: browser isolation + data residency guarantees.
-- Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime) — **enterprise**, separate from the OSS browser Computer plugin.
+- Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime) — **enterprise**, separate from the OSS browser Computer plugin / Better VM path.
 - Optional tiny local companion for true host FS later — document as a limit until then; do not ship Electron/CLI in the OSS spike.
 
 **Future / deferred**

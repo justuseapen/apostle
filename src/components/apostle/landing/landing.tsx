@@ -533,12 +533,17 @@ export function Landing() {
                 <div className="border-2 border-ph-focus bg-ph-void p-4 font-mono text-sm leading-relaxed">
                   <p className="mb-3 text-[0.7rem] tracking-[0.2em] text-ph-bone">N O W</p>
                   <p className="mb-3 text-ph-bone">
-                    Make the gateway a setting — OpenRouter key, base URL, model map — instead of a
-                    hardcoded host.
+                    Private themes without forking core. Phosphor public; Super Intelligence stays
+                    private.
+                  </p>
+                  <p className="mb-3 text-ph-bone">
+                    Honest Hero chrome — tool cards, run layout, drawer shells — without pretending
+                    the backends ship.
                   </p>
                   <p className="text-ph-bone">
-                    Freeze the plugin contract so a third plugin does not require editing the
-                    harness.
+                    <span className="text-ph-tool">Launch ready for OSS attention</span> — README,
+                    one-command seed, demo path, license, screenshots, what works / what doesn&apos;t,
+                    Computer/Browser security posture. SI stays private.
                   </p>
                 </div>
 
@@ -552,46 +557,44 @@ export function Landing() {
                     </li>
                     <li>
                       <span className="text-ph-tool">2.</span>{" "}
-                      <span className="text-ph-bone">Computer.</span> A jailed shell and files, as a
-                      plugin. Default deny on the network.
-                      <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
-                        ↳ cf. missing: “run this python” ×9
-                      </p>
+                      <span className="text-ph-bone">Thread management.</span> Rename, delete,
+                      sort/reorder the sidebar.
                     </li>
                     <li>
                       <span className="text-ph-tool">3.</span>{" "}
-                      <span className="text-ph-bone">Knowledge.</span> Upload a corpus, retrieve it,
-                      cite it.
+                      <span className="text-ph-bone">Search through threads.</span> Find past
+                      conversations without scrolling.
                     </li>
                     <li>
                       <span className="text-ph-tool">4.</span>{" "}
-                      <span className="text-ph-bone">Memory.</span> Facts about a person, separate
-                      from the corpus.
+                      <span className="text-ph-bone">Computer.</span> Browser VFS + constrained shell
+                      spike in flight. Default deny on the network.
                       <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
-                        ↳ cf. missing: “remember my name” ×4
+                        ↳ not host FS · not Firecracker
                       </p>
                     </li>
                     <li>
                       <span className="text-ph-tool">5.</span>{" "}
-                      <span className="text-ph-bone">Browser.</span> A page inside the same cage,
-                      with an allowlist.
+                      <span className="text-ph-bone">Better VM.</span> Clearer sandbox + richer
+                      runtime beyond current builtins. Firecracker stays enterprise Spike.
                     </li>
                     <li>
                       <span className="text-ph-tool">6.</span>{" "}
-                      <span className="text-ph-bone">Jev.</span> A decision model as the router:
-                      which model, and whether a tool needs a person to approve it.
-                      <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
-                        ↳ this is where it gets interesting
-                      </p>
+                      <span className="text-ph-bone">Knowledge / Memory / Browser / Approvals /
+                      Jev.</span> Corpus, facts, allowlisted browse trail, HITL, decision router.
                     </li>
                   </ol>
                 </div>
 
                 <div className="border-2 border-dashed border-ph-border bg-ph-void p-4 font-mono text-sm leading-relaxed text-ph-mute">
                   <p className="mb-3 text-[0.7rem] tracking-[0.2em] text-ph-dim">L A T E R</p>
+                  <p className="mb-3">
+                    <span className="text-ph-bone">Automations.</span> Scheduled / triggered runs
+                    without a live chat turn.
+                  </p>
                   <p>
-                    A theme you can swap without forking core. A catalog of plugins. Background runs
-                    that finish after the tab closes. Channels besides the web.
+                    A theme catalog. A catalog of plugins. Background runs that finish after the tab
+                    closes. Channels besides the web. MCP as the plugin port.
                   </p>
                   <p className="mt-3 text-ph-dim">
                     Billing / Stripe / plans —{" "}

@@ -23,7 +23,7 @@ The model sits behind one OpenAI-compatible gateway. This build talks to Grok. T
 - Sign-in, so threads and desk settings belong to the operator.
 - A desk-owned gateway: base URL + API key (OpenAI-compatible). Falls back to `XAI_API_KEY`, then `OPENROUTER_API_KEY`, then `OPENAI_API_KEY`.
 - A frozen plugin contract under `src/lib/apostle/plugins/` — register a plugin there; do not edit the harness.
-- Three plugins: clock, public https page fetch, and calculator.
+- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), and **Computer** (browser-sandbox VFS + constrained shell — not host FS).
 - A model map and a token log.
 - An optional free-plan cap (40 messages) so a paid plan has something to lift.
 - **Missing.** If a person asks for a capability the installed tools cannot do, the ask is logged with a count. Start it, dismiss it, or mark it done.
@@ -40,7 +40,7 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 **Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
 1. Users who are not the operator. Invite link, quota, their own threads.
-2. Computer. A jailed shell and files, as a plugin, default deny on the network. (Enterprise P1 — workspace computer / Firecracker-class isolation.)
+2. Computer (browser-first). Jailed VFS + constrained shell as a plugin; Artifacts lists workspace files. OPFS / File System Access where the browser allows. **CLI / desktop companion deferred.** Real host shell and Firecracker-class isolation stay enterprise Spike — not this OSS default. Network remains default deny.
 3. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
 4. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
 5. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
@@ -61,11 +61,13 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 **Spike / research (not ship commitments)**
 
 - 30-day architecture spike: browser isolation + data residency guarantees.
-- Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime).
+- Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime) — **enterprise**, separate from the OSS browser Computer plugin.
+- Optional tiny local companion for true host FS later — document as a limit until then; do not ship Electron/CLI in the OSS spike.
 
 **Future / deferred**
 
 - Desktop computer-use VM and distribution onto a customer’s existing surfaces (enterprise P4 — direction only).
+- **CLI / desktop Computer app — deferred.** Explore browser Computer first; revisit native only when browser APIs are proven insufficient.
 - **Billing / Stripe / plans — out for OSS.** Apostle is open-source; do not implement Stripe or paid plans as a near-term priority. The optional free-plan message cap stays as a desk control, not a billing product. Enterprise margin can be sponsored differently if needed.
 
 Not on the list until the above is dull: WhatsApp, a workflow canvas, a new model as the product.

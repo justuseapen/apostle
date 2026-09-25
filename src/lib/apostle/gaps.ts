@@ -106,7 +106,7 @@ export const ENTERPRISE_GAP_SEEDS: {
   {
     title: "Sandbox workspace computer",
     example: "Isolated shell + filesystem (default deny network)",
-    note: "P1 · Computer plugin",
+    note: "P1 · browser Computer spike first; CLI/desktop deferred; Firecracker = enterprise Spike",
   },
   {
     title: "Allowlisted browser trail",

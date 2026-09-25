@@ -1,19 +1,38 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { COMPUTER_LIMITS } from "@/lib/apostle/computer/limits.ts";
+import {
+  detectBrowserFs,
+  listOpfsMirror,
+  mirrorToOpfs,
+  pickDirectoryImport,
+} from "@/lib/apostle/computer/browser-fs.ts";
+import {
+  importComputerFiles,
+  listComputerArtifacts,
+  readComputerFile,
+  type ComputerArtifact,
+} from "@/lib/apostle/server";
 
 type DrawerId = "artifacts" | "memory" | "knowledge" | "run";
 
 /**
  * Right-hand run context column — Hero UI fiction → real chrome stubs.
- * Artifacts / Memory / Knowledge are shells; Computer + Browser still Missing.
+ * Artifacts now lists Computer VFS files when a thread is active.
  */
 export function RunContextPanel({
   toolCount = 0,
   showApprovalDemo = false,
+  threadId = null,
+  artifactsTick = 0,
 }: {
   toolCount?: number;
   showApprovalDemo?: boolean;
+  /** Active chat thread — Computer workspace is scoped per thread. */
+  threadId?: string | null;
+  /** Bump after tool turns so Artifacts refreshes. */
+  artifactsTick?: number;
 }) {
-  const [open, setOpen] = useState<DrawerId | null>("run");
+  const [open, setOpen] = useState<DrawerId | null>("artifacts");
 
   return (
     <aside className="hidden min-h-0 flex-col border-l-2 border-ph-border bg-ph-void xl:flex">
@@ -65,14 +84,7 @@ export function RunContextPanel({
           </PanelBlock>
         )}
         {open === "artifacts" && (
-          <PanelBlock title="Artifacts" hint="TODO: workspace FS + download">
-            <p className="text-ph-dim leading-relaxed">
-              No files yet. Sandbox computer will drop shells, diffs, and exports here.
-            </p>
-            <div className="mt-3 border-2 border-dashed border-ph-border px-3 py-6 text-center text-ph-dim">
-              Drop zone stub
-            </div>
-          </PanelBlock>
+          <ArtifactsDrawer threadId={threadId} tick={artifactsTick} />
         )}
         {open === "memory" && (
           <PanelBlock title="Memory" hint="Per-user · revocable · ≠ RAG">
@@ -99,6 +111,188 @@ export function RunContextPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function ArtifactsDrawer({
+  threadId,
+  tick,
+}: {
+  threadId?: string | null;
+  tick: number;
+}) {
+  const [files, setFiles] = useState<ComputerArtifact[]>([]);
+  const [preview, setPreview] = useState<{ path: string; content: string } | null>(null);
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const caps = detectBrowserFs();
+
+  const refresh = useCallback(async () => {
+    if (!threadId) {
+      setFiles([]);
+      return;
+    }
+    try {
+      const res = await listComputerArtifacts({ data: { threadId } });
+      setFiles(res.files);
+    } catch {
+      setStatus("Could not load workspace files.");
+    }
+  }, [threadId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh, tick]);
+
+  async function onImportFolder() {
+    setBusy(true);
+    setStatus("");
+    try {
+      const picked = await pickDirectoryImport();
+      if (picked.error && !picked.files.length) {
+        setStatus(picked.error);
+        return;
+      }
+      if (!threadId) {
+        setStatus("Start a chat thread first, then import.");
+        return;
+      }
+      const res = await importComputerFiles({
+        data: { threadId, files: picked.files },
+      });
+      for (const f of picked.files) {
+        await mirrorToOpfs(threadId, f.path, f.content);
+      }
+      setStatus(`Imported ${res.count} file(s) into the browser sandbox workspace.`);
+      await refresh();
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Import failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPreview(path: string) {
+    if (!threadId) return;
+    setBusy(true);
+    try {
+      const res = await readComputerFile({ data: { threadId, path } });
+      setPreview(res);
+      await mirrorToOpfs(threadId, path, res.content);
+    } catch {
+      setStatus("Could not read that file.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onShowOpfs() {
+    if (!threadId) return;
+    const names = await listOpfsMirror(threadId);
+    setStatus(
+      names.length
+        ? `OPFS mirror (${names.length}): ${names.slice(0, 8).join(", ")}${names.length > 8 ? "…" : ""}`
+        : "OPFS mirror empty — open a file or import a folder to populate it.",
+    );
+  }
+
+  return (
+    <PanelBlock
+      title="Artifacts"
+      hint="Computer VFS · browser sandbox · at your own risk"
+    >
+      <p className="text-ph-dim leading-relaxed">
+        Workspace files for this thread. Not your Mac disk unless you grant a folder.
+        Shell is constrained builtins — no host processes.
+      </p>
+      <details className="mt-2 border-2 border-ph-border bg-ph-void">
+        <summary className="cursor-pointer px-2 py-1.5 text-[0.65rem] tracking-wide text-ph-warn uppercase">
+          Capabilities + limits
+        </summary>
+        <pre className="max-h-48 overflow-auto whitespace-pre-wrap px-2 py-2 text-[0.65rem] text-ph-dim leading-relaxed">
+          {COMPUTER_LIMITS}
+        </pre>
+      </details>
+
+      <div className="mt-3 flex flex-wrap gap-1">
+        <button
+          type="button"
+          disabled={busy || !threadId}
+          onClick={() => void refresh()}
+          className="border-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-bone uppercase hover:border-ph-focus disabled:opacity-40"
+        >
+          Refresh
+        </button>
+        <button
+          type="button"
+          disabled={busy || !caps.directoryPicker}
+          onClick={() => void onImportFolder()}
+          className="border-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-bone uppercase hover:border-ph-focus disabled:opacity-40"
+          title={
+            caps.directoryPicker
+              ? "Grant a folder (File System Access API) — imports text into the VFS"
+              : "File System Access API unavailable in this browser"
+          }
+        >
+          Grant folder
+        </button>
+        <button
+          type="button"
+          disabled={busy || !caps.opfs || !threadId}
+          onClick={() => void onShowOpfs()}
+          className="border-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-dim uppercase hover:border-ph-bone disabled:opacity-40"
+        >
+          OPFS
+        </button>
+      </div>
+
+      {!threadId && (
+        <p className="mt-3 text-ph-dim">Send a message to open a thread workspace.</p>
+      )}
+
+      {files.length === 0 && threadId ? (
+        <div className="mt-3 border-2 border-dashed border-ph-border px-3 py-5 text-center text-ph-dim">
+          No files yet. Try <span className="text-ph-tool">/computer</span> or ask the
+          model to write a README via the computer tool.
+        </div>
+      ) : (
+        <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto">
+          {files.map((f) => (
+            <li key={f.path}>
+              <button
+                type="button"
+                onClick={() => void onPreview(f.path)}
+                className="flex w-full items-center justify-between border-2 border-ph-border px-2 py-1.5 text-left hover:border-ph-focus"
+              >
+                <span className="truncate text-ph-bone">{f.path}</span>
+                <span className="shrink-0 text-ph-dim">{f.bytes}b</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {preview && (
+        <div className="mt-3 border-2 border-ph-border bg-ph-void">
+          <div className="flex items-center justify-between border-b-2 border-ph-border px-2 py-1">
+            <span className="truncate text-ph-tool">{preview.path}</span>
+            <button
+              type="button"
+              className="text-ph-dim uppercase hover:text-ph-bone"
+              onClick={() => setPreview(null)}
+            >
+              Close
+            </button>
+          </div>
+          <pre className="max-h-40 overflow-auto whitespace-pre-wrap px-2 py-2 text-[0.65rem] text-ph-bone">
+            {preview.content.slice(0, 4000)}
+            {preview.content.length > 4000 ? "\n…" : ""}
+          </pre>
+        </div>
+      )}
+
+      {status && <p className="mt-2 text-[0.65rem] text-ph-warn leading-relaxed">{status}</p>}
+    </PanelBlock>
   );
 }
 

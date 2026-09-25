@@ -9,7 +9,7 @@ import { SlashMenu } from "@/components/apostle/slash-menu";
 import { ApprovalCard, ToolCard } from "@/components/apostle/tool-card";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { listMessages, listThreads, sendMessage, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
+import { listMessages, listThreads, sendMessage, importComputerFiles, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
 import {
   filterSlashSkills,
   listSlashSkills,
@@ -53,6 +53,7 @@ function Chat() {
   const [openList, setOpenList] = useState(false);
   const [slashIndex, setSlashIndex] = useState(0);
   const [showApprovalDemo, setShowApprovalDemo] = useState(false);
+  const [artifactsTick, setArtifactsTick] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
   const allSkills = useMemo(() => listSlashSkills(), []);
 
@@ -123,8 +124,25 @@ function Chat() {
         },
       ]);
     };
-    window.addEventListener("apostle:demo-message", onDemo);
-    return () => window.removeEventListener("apostle:demo-message", onDemo);
+    const onComputerSeed = (e: Event) => {
+      const detail = (
+        e as CustomEvent<{ threadId?: string; files?: { path: string; content: string }[] }>
+      ).detail;
+      const files = detail?.files;
+      if (!files?.length) return;
+      void (async () => {
+        const threadId = detail?.threadId || null;
+        if (!threadId) return;
+        setActive(threadId);
+        await importComputerFiles({ data: { threadId, files } });
+        setArtifactsTick((n) => n + 1);
+      })();
+    };    window.addEventListener("apostle:demo-message", onDemo);
+    window.addEventListener("apostle:computer-seed", onComputerSeed);
+    return () => {
+      window.removeEventListener("apostle:demo-message", onDemo);
+      window.removeEventListener("apostle:computer-seed", onComputerSeed);
+    };
   }, []);
 
   async function openThread(id: string) {
@@ -207,6 +225,7 @@ function Chat() {
       if (result.gap) setLogged(result.gap);
       setActive(result.threadId);
       setMessages(await listMessages({ data: result.threadId }));
+      setArtifactsTick((n) => n + 1);
       await refreshThreads();
     } catch {
       setError("The reply failed. Try again.");
@@ -364,7 +383,12 @@ function Chat() {
           </form>
         </section>
 
-        <RunContextPanel toolCount={toolCount} showApprovalDemo={showApprovalDemo} />
+        <RunContextPanel
+          toolCount={toolCount}
+          showApprovalDemo={showApprovalDemo}
+          threadId={active}
+          artifactsTick={artifactsTick}
+        />
       </div>
     </Shell>
   );

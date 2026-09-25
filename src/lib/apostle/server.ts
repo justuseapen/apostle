@@ -44,7 +44,7 @@ export type UsageRow = {
 };
 
 const DEFAULT_PROMPT =
-  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it. When the user asks to file, log, or add a Missing feature/ask to the Desk roadmap, call create_missing with a short title (and optional detail).";
+  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it. When the user asks to file, log, or add a Missing feature/ask to the Desk roadmap, call create_missing with a short title (and optional detail). When the user wants files, a workspace, or a simple shell, use the computer tool (actions: list, read, write, run, info). Computer is a browser sandbox VFS — not the host Mac disk, not real bash.";
 
 type Label = "cheap" | "default" | "strong" | "vision";
 
@@ -108,13 +108,13 @@ function resolveGateway(settings: SettingsRow): GatewayResolved {
   });
 }
 
-/** Soft-enable create_missing for existing operators so Qwen can file Desk asks. */
-async function ensureCreateMissingEnabled(userId: string, pluginsRaw: string) {
+/** Soft-enable a known plugin id for existing operators (idempotent). */
+async function ensurePluginEnabled(userId: string, pluginsRaw: string, pluginId: string) {
   const list = parseList(pluginsRaw);
-  if (list.includes("create_missing") || !isKnownPluginId("create_missing")) {
+  if (list.includes(pluginId) || !isKnownPluginId(pluginId)) {
     return pluginsRaw;
   }
-  list.push("create_missing");
+  list.push(pluginId);
   const next = JSON.stringify(list);
   const sql = await getSql();
   await sql`update settings set plugins = ${next} where user_id = ${userId}`;
@@ -134,7 +134,10 @@ async function ensureSettings(userId: string) {
   `;
   const row = rows[0];
   if (!row) return row;
-  row.plugins = await ensureCreateMissingEnabled(userId, row.plugins);
+  // Soft-enable create_missing so Qwen can file Desk asks.
+  row.plugins = await ensurePluginEnabled(userId, row.plugins, "create_missing");
+  // Soft-enable browser Computer spike for existing operators.
+  row.plugins = await ensurePluginEnabled(userId, row.plugins, "computer");
   return row;
 }
 
@@ -390,6 +393,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       for (const call of calls) {
         const result = await runPluginTool(call.function.name, call.function.arguments, {
           userId: context.userId,
+          threadId: threadId ?? undefined,
         });
         traces.push({ name: call.function.name, args: call.function.arguments, result });
         messages.push({
@@ -546,4 +550,62 @@ export const fileGapAsk = createServerFn({ method: "POST" })
     });
     if (!row) return { ok: false as const, error: "Ask was dismissed or empty." };
     return { ok: true as const, title: row.title, created: row.created };
+  });
+
+export type ComputerArtifact = {
+  path: string;
+  bytes: number;
+  updated_at: string;
+};
+
+/** List Computer VFS files for the Artifacts drawer (per thread). */
+export const listComputerArtifacts = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null }) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    const { listFileRows, workspaceRef } = await import("./computer/vfs.ts");
+    const rows = await listFileRows(workspaceRef(context.userId, data.threadId));
+    const files: ComputerArtifact[] = rows.map((r) => ({
+      path: r.path,
+      bytes: r.content.length,
+      updated_at: r.updated_at,
+    }));
+    return { files, threadId: data.threadId };
+  });
+
+/** Import text files from a browser folder grant into the Computer VFS. */
+export const importComputerFiles = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null; files: { path: string; content: string }[] }) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+    files: (input.files || [])
+      .slice(0, 40)
+      .map((f) => ({
+        path: String(f.path || "").slice(0, 240),
+        content: String(f.content || "").slice(0, 80_000),
+      })),
+  }))
+  .handler(async ({ context, data }) => {
+    const { writeFile, workspaceRef } = await import("./computer/vfs.ts");
+    const ws = workspaceRef(context.userId, data.threadId);
+    const results: string[] = [];
+    for (const f of data.files) {
+      results.push(await writeFile(ws, f.path, f.content));
+    }
+    return { ok: true as const, results, count: results.length };
+  });
+
+/** Read one Computer VFS file (Artifacts preview). */
+export const readComputerFile = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null; path: string }) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+    path: (input.path || "").slice(0, 240),
+  }))
+  .handler(async ({ context, data }) => {
+    const { readFile, workspaceRef } = await import("./computer/vfs.ts");
+    const content = await readFile(workspaceRef(context.userId, data.threadId), data.path);
+    return { path: data.path, content };
   });

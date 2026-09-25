@@ -1,5 +1,6 @@
 import { calcPlugin } from "./plugins/calc.ts";
 import { clockPlugin } from "./plugins/clock.ts";
+import { computerPlugin } from "./plugins/computer.ts";
 import { createMissingPlugin } from "./plugins/create-missing.ts";
 import { fetchPagePlugin } from "./plugins/fetch-page.ts";
 import type { ApostlePlugin } from "./plugins/types.ts";
@@ -29,6 +30,7 @@ const INSTALLED: ApostlePlugin[] = [
   fetchPagePlugin,
   calcPlugin,
   createMissingPlugin,
+  computerPlugin,
 ];
 
 const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prompt: string }> = {
@@ -52,6 +54,12 @@ const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prom
     aliases: ["file_ask", "ask", "gap"],
     prompt:
       "File this Missing ask on the Desk with the create_missing tool: title \"",
+  },
+  computer: {
+    command: "computer",
+    aliases: ["shell", "fs", "workspace", "vfs"],
+    prompt:
+      "Use the computer tool (browser sandbox workspace). First call action info if unsure of limits, then list/read/write/run as needed: ",
   },
 };
 

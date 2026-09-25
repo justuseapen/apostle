@@ -3,3 +3,37 @@ node_modules/
 .github_repo
 .env
 .env.*
+!.env.example
+
+# Local / embedded DB + operator dumps
+.data/
+.pglite/
+*.db
+*.sqlite
+*.sqlite3
+pglite-debug.log
+
+# Keys, secrets, dumps
+*.pem
+*.key
+credentials.json
+operator-dump*
+dump.sql
+
+# Playwright / browser artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+.screenshots-tmp/
+**/browser-use-verdict.json
+**/browser-computer-verdict.json
+
+# Build / tooling
+dist/
+.output/
+.nitro/
+.tanstack/
+.vercel/
+*.tsbuildinfo
+.DS_Store

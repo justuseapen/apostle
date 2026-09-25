@@ -14,10 +14,11 @@ What does NOT work (needs native / Firecracker later):
 • Real bash / Node / package installs on your Mac
 • Unjailed host filesystem or Electron/CLI companion
 • Network from the shell (default deny — law)
-• Persistent VM / Firecracker-class isolation
+• Persistent VM / Firecracker-class isolation (enterprise Spike — not OSS default)
 
+Next honest deepen: Better VM (clearer sandbox + richer runtime inside the browser cage).
 At your own risk of any data you grant or import into the workspace.
-OSS spike — not an enterprise sandbox proof.`;
+OSS spike — not an enterprise sandbox proof. Not “done.”`;
 
 export const COMPUTER_BLURB =
   "Browser workspace: list/read/write files + constrained shell. Not host FS.";

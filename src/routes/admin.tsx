@@ -126,8 +126,9 @@ function Desk() {
           <TileHead left="THEME" right="LOOK · NOT HARNESS" />
           <div className="space-y-3 px-3 py-3">
             <p className="text-ph-dim leading-relaxed">
-              Phosphor is the public default. Super Intelligence is a private customer skin (TMTG
-              brand board). Themes never register tools. Pitch link:{" "}
+              Phosphor is the public default everywhere OSS is marketed. Super Intelligence is a
+              private customer skin (enable-only — not a public catalog entry). Themes never
+              register tools. Private pitch link:{" "}
               <span className="text-ph-bone">?theme=si</span>
             </p>
             <ThemeSelect />
@@ -201,6 +202,15 @@ function Desk() {
 
         <Tile>
           <TileHead left="PLUGINS" right="DEFAULT: DENY" />
+          <div className="space-y-2 px-3 pt-3">
+            <p className="text-[0.7rem] text-ph-dim leading-relaxed">
+              Plugins declare network / secrets / approvals. Computer is a browser VFS + constrained
+              builtins — <span className="text-ph-bone">not host FS</span>, network default deny.
+              Browser is Desk-allowlisted Playwright + screenshot trail —{" "}
+              <span className="text-ph-bone">not Firecracker</span>, not desktop computer-use.
+              Better VM is the honest Next deepen. Neither plugin is “done.”
+            </p>
+          </div>
           <ul className="divide-y-2 divide-ph-border">
             {catalog.map((p) => {
               const on = plugins.includes(p.id);
@@ -231,7 +241,7 @@ function Desk() {
             <p className="text-[0.7rem] text-ph-dim leading-relaxed">
               One host per line. Use <span className="text-ph-tool">*.example.com</span> for
               suffix match. Localhost and private IPs are always blocked. Toggle the Browser
-              plugin above to enable tool calls.
+              plugin above to enable tool calls. URLs you open are at your own risk.
             </p>
             <PhTextarea
               value={allowlistText}
@@ -265,7 +275,9 @@ function Desk() {
         >
           <span>
             <span className="block text-ph-bone">Free-plan cap</span>
-            <span className="text-[0.7rem] text-ph-dim">{count} messages sent. Cap is 40.</span>
+            <span className="text-[0.7rem] text-ph-dim">
+              {count} messages sent. Cap is 40. Desk control only — billing / Stripe is out for OSS.
+            </span>
           </span>
           <span className={quota ? "text-ph-focus" : "text-ph-dim"}>
             {quota ? "ENFORCED" : "OFF"}

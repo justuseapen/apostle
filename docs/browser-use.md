@@ -76,4 +76,5 @@ node scripts/verify-browser-use.mjs
 
 - Computer (VFS) spike: `docs/browser-computer-spike.md`
 - Enterprise matrix: `docs/enterprise-buyin-roadmap.md`
-- Screenshots: `media/browser-use-*.png`
+- Demo: `docs/demo-script.md`
+- Repo screenshots: `screenshots/oss-launch-*.png` (Phosphor only — do not use SI chrome for OSS promo)

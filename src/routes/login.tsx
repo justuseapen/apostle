@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PhButton } from "@/components/apostle/phosphor";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { ModeToggle } from "@/lib/theme";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -8,6 +9,9 @@ function Login() {
   return (
     <main className="phosphor grid min-h-dvh place-items-center bg-ph-void px-6 text-ph-bone">
       <div className="ph-scanlines pointer-events-none fixed inset-0 z-50" aria-hidden />
+      <div className="absolute top-3 right-3 z-10">
+        <ModeToggle />
+      </div>
       <div className="relative z-10 w-full max-w-sm border-2 border-ph-focus bg-ph-tile">
         <div className="border-b-2 border-ph-border px-3 py-2 font-mono text-[0.68rem] tracking-wide text-ph-dim uppercase">
           ~/APOSTLE — SIGN IN

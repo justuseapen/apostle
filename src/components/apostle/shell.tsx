@@ -3,10 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { PhButton } from "@/components/apostle/phosphor";
 import { GROK_PROVIDERS, signIn } from "@/lib/auth/client";
 import { SignInGate, UserButton } from "@/lib/auth/gates";
+import { ModeToggle } from "@/lib/theme";
 
 function Gate() {
   return (
     <main className="phosphor grid min-h-dvh place-items-center bg-ph-void px-6 text-ph-bone">
+      <div className="absolute top-3 right-3 z-10">
+        <ModeToggle />
+      </div>
       <div className="w-full max-w-sm border-2 border-ph-focus bg-ph-tile">
         <div className="border-b-2 border-ph-border px-3 py-2 font-mono text-[0.68rem] tracking-wide text-ph-dim uppercase">
           ~/APOSTLE — SIGN IN
@@ -52,12 +56,13 @@ export function Shell({ children, desk }: { children: ReactNode; desk?: boolean 
             <span className="text-ph-missing">◆</span> APOSTLE
           </Link>
           <nav className="flex items-center gap-2 font-mono text-xs">
+            <ModeToggle />
             <Link
               to={desk ? "/" : "/admin"}
               className={
                 desk
                   ? "border-2 border-ph-border px-3 py-1.5 text-ph-bone hover:border-ph-bone"
-                  : "border-2 border-ph-focus bg-ph-focus px-3 py-1.5 text-ph-void"
+                  : "border-2 border-ph-focus bg-ph-focus px-3 py-1.5 text-ph-on"
               }
             >
               {desk ? "CHAT" : "DESK"}

@@ -71,7 +71,7 @@ export function SignInButtons() {
           key={p.providerId}
           type="button"
           onClick={() => signIn(p.providerId, { callbackURL: "/" })}
-          className="h-11 w-full border-2 border-ph-focus bg-ph-focus px-4 font-mono text-xs tracking-wide text-ph-void uppercase"
+          className="h-11 w-full border-2 border-ph-focus bg-ph-focus px-4 font-mono text-xs tracking-wide text-ph-on uppercase"
         >
           Continue with {p.label}
         </button>

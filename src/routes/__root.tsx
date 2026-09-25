@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { MODE_BOOT_SCRIPT, ModeProvider } from "@/lib/theme";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Apostle";
@@ -26,15 +27,18 @@ export const Route = createRootRoute({
     ],
   }),
   component: () => (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-mode="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: MODE_BOOT_SCRIPT }} />
       </head>
       <body>
         <PreviewHostBridge />
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+        <ModeProvider>
+          <AuthProvider>
+            <Outlet />
+          </AuthProvider>
+        </ModeProvider>
         <Scripts />
       </body>
     </html>

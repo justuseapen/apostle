@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Link } from "@tanstack/react-router";
 import { Tile, TileHead } from "@/components/apostle/phosphor";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { ModeToggle } from "@/lib/theme";
 
 const GITHUB = "https://github.com/justuseapen/apostle";
 const INSTALL = `$ npm install
@@ -185,7 +186,7 @@ export function Landing() {
                   onClick={() => scrollTo(n.id)}
                   className={`px-2 py-1 ${
                     on
-                      ? "bg-ph-focus text-ph-void"
+                      ? "bg-ph-focus text-ph-on"
                       : "text-ph-dim hover:text-ph-bone"
                   }`}
                 >
@@ -202,15 +203,16 @@ export function Landing() {
               router <span className="text-ph-missing">cheap</span>
             </span>
             <span className="text-ph-bone tabular-nums">{clock}</span>
+            <ModeToggle />
             <Link
               to="/login"
-              className="border-2 border-ph-focus bg-ph-focus px-2 py-1 text-ph-void"
+              className="border-2 border-ph-focus bg-ph-focus px-2 py-1 text-ph-on"
             >
               SIGN IN
             </Link>
           </div>
         </div>
-        <div className="overflow-hidden border-t-2 border-ph-focus bg-ph-focus text-ph-void">
+        <div className="overflow-hidden border-t-2 border-ph-focus bg-ph-focus text-ph-on">
           <p className="ph-marquee whitespace-nowrap py-1.5 font-mono text-[0.7rem] font-medium tracking-wide">
             {ticker}&nbsp;&nbsp;&nbsp;{ticker}
           </p>
@@ -257,7 +259,7 @@ export function Landing() {
                 <button
                   type="button"
                   onClick={() => scrollTo("law")}
-                  className="border-2 border-ph-focus bg-ph-focus px-4 py-2.5 font-mono text-xs tracking-wide text-ph-void uppercase"
+                  className="border-2 border-ph-focus bg-ph-focus px-4 py-2.5 font-mono text-xs tracking-wide text-ph-on uppercase"
                 >
                   READ THE LAW →
                 </button>
@@ -374,7 +376,7 @@ export function Landing() {
                     <div key={m.label} className="flex items-center gap-3">
                       <span
                         className={`min-w-[4.5rem] px-1.5 py-0.5 ${
-                          m.hot ? "bg-ph-missing text-ph-void" : "text-ph-missing"
+                          m.hot ? "bg-ph-missing text-ph-on" : "text-ph-missing"
                         }`}
                       >
                         {m.label}
@@ -656,7 +658,7 @@ export function Landing() {
                 href={GITHUB}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex w-fit border-2 border-ph-tool bg-ph-tool px-4 py-2.5 font-mono text-xs tracking-wide text-ph-void uppercase"
+                className="inline-flex w-fit border-2 border-ph-tool bg-ph-tool px-4 py-2.5 font-mono text-xs tracking-wide text-ph-on uppercase"
               >
                 FORK IT ↗
               </a>
@@ -789,7 +791,7 @@ function LawCard({
     <article
       className={`relative border-2 p-4 ${
         filled
-          ? "border-ph-focus bg-ph-focus text-ph-void ph-scan-fill"
+          ? "border-ph-focus bg-ph-focus text-ph-on ph-scan-fill"
           : missing
             ? "border-ph-missing bg-ph-void text-ph-bone"
             : "border-ph-border bg-ph-void text-ph-bone"
@@ -798,31 +800,31 @@ function LawCard({
       <div className="mb-3 flex items-start justify-between gap-2">
         <span
           className={`font-display text-5xl leading-none ${
-            filled ? "text-ph-void" : missing ? "text-ph-missing" : "text-ph-bone"
+            filled ? "text-ph-on" : missing ? "text-ph-missing" : "text-ph-bone"
           }`}
         >
           {numeral}
         </span>
         <span
           className={`font-mono text-[0.65rem] tracking-wide ${
-            filled ? "text-ph-void/70" : "text-ph-dim"
+            filled ? "text-ph-on/70" : "text-ph-dim"
           }`}
         >
           {cite}
         </span>
       </div>
-      <p className={`font-mono text-sm leading-relaxed ${filled ? "text-ph-void" : ""}`}>
+      <p className={`font-mono text-sm leading-relaxed ${filled ? "text-ph-on" : ""}`}>
         {bodyNode}
       </p>
       {emph ? (
-        <p className="mt-3 font-display text-2xl leading-none tracking-wide text-ph-void">
+        <p className="mt-3 font-display text-2xl leading-none tracking-wide text-ph-on">
           {emph}
         </p>
       ) : null}
       {note ? (
         <p
           className={`mt-4 font-marginalia text-sm italic ${
-            filled ? "text-ph-void/80" : "text-ph-missing"
+            filled ? "text-ph-on/80" : "text-ph-missing"
           }`}
         >
           {note}

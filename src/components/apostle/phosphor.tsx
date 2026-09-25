@@ -43,8 +43,8 @@ export function TileHead({ left, right }: { left: string; right?: string }) {
 type Tone = "focus" | "tool" | "bone" | "ghost" | "missing";
 
 const BTN: Record<Tone, string> = {
-  focus: "border-2 border-ph-focus bg-ph-focus text-ph-void",
-  tool: "border-2 border-ph-tool bg-transparent text-ph-tool hover:bg-ph-tool hover:text-ph-void",
+  focus: "border-2 border-ph-focus bg-ph-focus text-ph-on",
+  tool: "border-2 border-ph-tool bg-transparent text-ph-tool hover:bg-ph-tool hover:text-ph-on",
   bone: "border-2 border-ph-bone bg-transparent text-ph-bone",
   ghost: "border-2 border-ph-border bg-transparent text-ph-bone hover:border-ph-bone",
   missing: "border-2 border-ph-missing bg-transparent text-ph-missing",

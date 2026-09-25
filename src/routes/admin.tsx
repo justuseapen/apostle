@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { openOnboarding } from "@/components/apostle/onboarding";
 import { PhButton, PhInput, PhTextarea, Tile, TileHead } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
 import { getDesk, listGaps, saveDesk, setGap, type GapRow } from "@/lib/apostle/server";
@@ -91,7 +92,7 @@ function Desk() {
       ? gateway.source === "desk"
         ? `Gateway live · desk key ${gateway.keyHint} · ${gateway.baseUrl}`
         : `Gateway live · env key · ${gateway.baseUrl}`
-      : "Gateway unavailable — paste a key below, or set XAI_API_KEY / OPENROUTER_API_KEY.";
+      : "Gateway unavailable — paste a key, point at local Ollama, or set XAI_API_KEY / OPENROUTER_API_KEY.";
 
   return (
     <Shell desk>
@@ -104,6 +105,9 @@ function Desk() {
             <p className="max-w-xl text-ph-dim leading-relaxed">
               {gatewayLine} The router picks cheap, default, strong, or vision before each reply.
             </p>
+            <PhButton tone="ghost" className="h-9 w-fit" onClick={() => openOnboarding()}>
+              Setup guide
+            </PhButton>
           </div>
         </Tile>
 
@@ -112,7 +116,9 @@ function Desk() {
           <div className="grid gap-3 px-3 py-3">
             <p className="text-ph-dim leading-relaxed">
               Any OpenAI-compatible endpoint: Grok, OpenRouter, Ollama. Leave the key blank on save
-              to keep the current one. Example OpenRouter base:{" "}
+              to keep the current one. Local Ollama needs no key — set base{" "}
+              <span className="text-ph-bone">http://localhost:11434/v1</span> and map models (e.g.{" "}
+              <span className="text-ph-bone">qwen3:0.6b</span>). Cloud example:{" "}
               <span className="text-ph-bone">https://openrouter.ai/api/v1</span>
             </p>
             <label className="flex flex-col gap-1 text-[0.7rem] tracking-wide text-ph-dim uppercase">

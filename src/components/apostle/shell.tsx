@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { OnboardingGuide, OnboardingHelpLink } from "@/components/apostle/onboarding";
 import { SignInPanel } from "@/components/apostle/sign-in-panel";
 import { SignInGate, UserButton } from "@/lib/auth/gates";
 import { ModeToggle } from "@/lib/theme";
@@ -21,6 +22,7 @@ export function Shell({ children, desk }: { children: ReactNode; desk?: boolean 
           </Link>
           <nav className="flex items-center gap-2 font-mono text-xs">
             <ModeToggle />
+            <OnboardingHelpLink />
             <Link
               to={desk ? "/" : "/admin"}
               className={
@@ -34,6 +36,8 @@ export function Shell({ children, desk }: { children: ReactNode; desk?: boolean 
             <UserButton />
           </nav>
         </header>
+        {/* Auto-show once per browser; HELP / desk re-open anytime. */}
+        <OnboardingGuide auto />
         {children}
       </div>
     </SignInGate>

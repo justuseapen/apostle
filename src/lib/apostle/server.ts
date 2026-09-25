@@ -125,12 +125,16 @@ async function chatCompletions(
   gateway: GatewayResolved,
   body: Record<string, unknown>,
 ): Promise<Response> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  // Ollama ignores auth; still send Bearer so OpenAI-compat clients stay uniform.
+  if (gateway.apiKey) {
+    headers.Authorization = `Bearer ${gateway.apiKey}`;
+  }
   return fetch(`${gateway.baseUrl}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${gateway.apiKey}`,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 }
@@ -263,7 +267,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     const sql = await getSql();
     const settings = await ensureSettings(context.userId);
     const gateway = resolveGateway(settings);
-    if (!gateway.apiKey) {
+    if (gateway.source === "none" || !gateway.apiKey) {
       return {
         ok: false as const,
         error: GATEWAY_MISSING_ERROR,

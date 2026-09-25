@@ -1,9 +1,13 @@
 /**
  * OpenAI-compatible gateway resolution — desk key wins, then env, then none.
+ * Loopback bases (Ollama) need no real key; we synthesize a placeholder Bearer.
  */
 export const DEFAULT_GATEWAY_BASE = "https://api.x.ai/v1";
 export const OPENROUTER_GATEWAY_BASE = "https://openrouter.ai/api/v1";
 export const OPENAI_GATEWAY_BASE = "https://api.openai.com/v1";
+export const OLLAMA_GATEWAY_BASE = "http://localhost:11434/v1";
+/** Dummy Bearer for local OpenAI-compatible servers that ignore auth. */
+export const LOCAL_GATEWAY_KEY = "ollama";
 
 export function normalizeBaseUrl(raw: string | null | undefined): string {
   const trimmed = (raw ?? "").trim().replace(/\/+$/, "");
@@ -17,9 +21,21 @@ export function normalizeBaseUrl(raw: string | null | undefined): string {
   }
 }
 
+/** True for localhost / loopback OpenAI-compatible servers (Ollama, LM Studio, etc.). */
+export function isLocalGateway(baseUrl: string): boolean {
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase();
+    return host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
 export function maskKey(key: string): string {
   const t = key.trim();
-  if (t.length < 8) return t ? "••••" : "";
+  if (!t) return "";
+  if (t === LOCAL_GATEWAY_KEY) return "local";
+  if (t.length < 8) return "••••";
   return `••••${t.slice(-4)}`;
 }
 
@@ -53,6 +69,10 @@ export function resolveGateway(input: {
   let baseUrl = normalizeBaseUrl(input.gateway_base_url);
   const deskKey = (input.gateway_api_key ?? "").trim();
   if (deskKey) return { baseUrl, apiKey: deskKey, source: "desk" };
+  // Local Ollama (etc.): desk base alone is enough — no cloud key.
+  if (isLocalGateway(baseUrl)) {
+    return { baseUrl, apiKey: LOCAL_GATEWAY_KEY, source: "desk" };
+  }
   const envKey = (input.envKey ?? "").trim();
   if (envKey) {
     // Desk left the default xAI URL but the env key is OpenRouter/OpenAI — use that host.
@@ -69,4 +89,4 @@ export function resolveGateway(input: {
 }
 
 export const GATEWAY_MISSING_ERROR =
-  "No model key. Set the gateway on DESK (base URL + API key), or set XAI_API_KEY / OPENROUTER_API_KEY / OPENAI_API_KEY.";
+  "No model gateway. On DESK set a cloud key, or point Base URL at local Ollama (http://localhost:11434/v1) and map models — or set XAI_API_KEY / OPENROUTER_API_KEY / OPENAI_API_KEY.";

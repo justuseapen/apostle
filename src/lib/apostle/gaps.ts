@@ -111,22 +111,22 @@ export const ENTERPRISE_GAP_SEEDS: {
   {
     title: "Better VM",
     example: "Clearer sandbox boundary + richer runtime beyond VFS builtins",
-    note: "Next · deepen browser Computer; do not promise Firecracker as OSS default",
+    note: "Next · deepen browser Computer; cp/mv/grep shipped as small steps; do not promise Firecracker as OSS default",
   },
   {
     title: "Allowlisted browser trail",
     example: "Contained Chromium + domain allowlist + screenshots",
-    note: "P2 · Partial — Browser plugin (Playwright + Desk allowlist + screenshot trail) shipped; Firecracker residency still Spike",
+    note: "Partial — Browser plugin + Desk session admin + click/type polish; Firecracker residency still Spike",
   },
   {
     title: "Search through threads",
     example: "Find past conversations by content or title",
-    note: "Next · ChatGPT-shaped desk hygiene",
+    note: "Partial — sidebar search shipped (title + message content); deepen ranking later",
   },
   {
     title: "Thread management",
     example: "Rename, delete, sort/reorder sidebar threads",
-    note: "Next · operator desk hygiene",
+    note: "Partial — rename/delete/reorder shipped in chat sidebar; Desk Threads shows counts",
   },
   {
     title: "Automations",

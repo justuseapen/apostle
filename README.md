@@ -25,7 +25,7 @@ The model sits behind one OpenAI-compatible gateway. The same slot works for Gro
 - Sign-in, so threads and desk settings belong to the operator.
 - A desk-owned gateway: base URL + API key (OpenAI-compatible). Falls back to `XAI_API_KEY`, then `OPENROUTER_API_KEY`, then `OPENAI_API_KEY`.
 - A frozen plugin contract under `src/lib/apostle/plugins/` — register a plugin there; do not edit the harness.
-- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), **Computer** (browser-sandbox VFS + constrained shell — **not** host FS; **spike**, not done), and **Browser** (allowlisted Playwright + screenshot trail — **partial**, not done).
+- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), **Hash** (example third-party-style digest plugin), **Computer** (browser-sandbox VFS + constrained shell — **not** host FS; **spike**, not done), and **Browser** (allowlisted Playwright + screenshot trail — **partial**, not done).
 - A model map and a token log.
 - An optional free-plan message cap (40) as a **desk control**, not a billing product.
 - **Missing.** If a person asks for a capability the installed tools cannot do, the ask is logged with a count. Start it, dismiss it, or mark it done.
@@ -34,8 +34,8 @@ The model sits behind one OpenAI-compatible gateway. The same slot works for Gro
 
 | Surface | Works | Does not |
 |--------|--------|----------|
-| **Computer** | Per-thread VFS (list/read/write), constrained builtins (`ls`, `cat`, `echo`, …), Artifacts drawer, optional folder grant → import into VFS | Host filesystem/shell, real bash/Node, network from the shell (default deny), Firecracker / CLI / Electron |
-| **Browser** | Desk allowlist + Playwright open/navigate/snapshot/click/type/close, screenshot trail in tool cards + Context → Browser | Arbitrary web, desktop computer-use, Firecracker residency, durable authenticated sessions |
+| **Computer** | Per-thread VFS (list/read/write), constrained builtins (`ls`, `cat`, `echo`, `cp`, `mv`, `grep`, …), Artifacts drawer, optional folder grant → import into VFS | Host filesystem/shell, real bash/Node, network from the shell (default deny), Firecracker / CLI / Electron |
+| **Browser** | Desk allowlist + Playwright open/navigate/snapshot/click/type/close, screenshot trail, Desk live-session admin | Arbitrary web, desktop computer-use, Firecracker residency, durable authenticated sessions |
 
 **Better VM** is the honest Next deepen beyond today’s VFS builtins. Firecracker-class isolation stays **enterprise Spike**, not the OSS default. Details: [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md), [`docs/browser-use.md`](./docs/browser-use.md).
 
@@ -64,14 +64,14 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 **Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
 1. Users who are not the operator. Invite link, quota, their own threads.
-2. **Thread management.** Rename, delete, sort/reorder the sidebar — operator hygiene for a real desk.
-3. **Search through threads.** Find past conversations by content / title without scrolling the sidebar.
+2. **Thread management.** Rename, delete, sort/reorder the sidebar — **partial shipped** (chat sidebar + Desk Threads visibility).
+3. **Search through threads.** Find past conversations by content / title — **partial shipped** (local title + message search).
 4. Computer (browser-first) — **spike shipping on main** (partial). Jailed VFS + constrained shell as a plugin; Artifacts lists workspace files. OPFS / File System Access where the browser allows. **CLI / desktop companion deferred.** Network remains default deny. Real host shell stays out of the OSS default.
-5. **Better VM.** Honest next step beyond the current browser Computer VFS/builtins: clearer sandbox boundary and a richer runtime inside the browser cage. **Do not promise Firecracker as the OSS default** — Firecracker-class isolation stays enterprise Spike.
+5. **Better VM.** Honest next step beyond the current browser Computer VFS/builtins: clearer sandbox boundary and a richer runtime inside the browser cage (`cp` / `mv` / `grep` are small steps). **Do not promise Firecracker as the OSS default** — Firecracker-class isolation stays enterprise Spike.
 6. Tool cards in the chat surface (streaming tool-call UI, not just JSON in the thread).
 7. Knowledge. Upload a corpus, retrieve it, cite it. (Enterprise P2 — RAG drawer.)
 8. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
-9. Browser (**partial — shipping on main**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail in tool cards + Context → Browser. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
+9. Browser (**partial — shipping on main**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail; Desk session admin. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
 10. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
 11. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
 
@@ -119,7 +119,7 @@ Open `http://localhost:8080`. Or configure DESK (`/admin`) yourself → paste ba
 
 60–90s walkthrough: [`docs/demo-script.md`](./docs/demo-script.md).
 
-Private Super Intelligence skin (does **not** change the public Phosphor default; **not** in the public catalog): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
+Private Super Intelligence skin (does **not** change the public Phosphor default; **not** in the public catalog): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. Second public theme: `?theme=ink` (see [`docs/themes.md`](./docs/themes.md)). For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
 
 OpenRouter example: base `https://openrouter.ai/api/v1`, key from openrouter.ai/keys, model ids like `openai/gpt-4o-mini` in the model map.
 
@@ -131,11 +131,13 @@ Sign-in is Google or X through the hosted broker. If that redirect is refused on
 
 | Doc | What |
 |---|---|
+| [`docs/plugins.md`](./docs/plugins.md) | Add a third-party-style plugin in an afternoon |
+| [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink); SI stays private |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |
 | [`docs/demo-script.md`](./docs/demo-script.md) | Short demo for OSS audiences |
 | [`docs/enterprise-buyin-roadmap.md`](./docs/enterprise-buyin-roadmap.md) | Enterprise ask matrix (SI private) |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Missing + PR norms |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Missing + plugin/theme rituals + PR norms |
 
 Landing `#run` and `#roadmap` mirror this README.
 

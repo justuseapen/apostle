@@ -5,16 +5,19 @@ import { clockPlugin } from "./clock";
 import { computerPlugin } from "./computer";
 import { createMissingPlugin } from "./create-missing";
 import { fetchPagePlugin } from "./fetch-page";
+import { hashPlugin } from "./hash";
 
 /**
  * Registry. Add a plugin by importing it here — do not touch the chat harness.
  * Default plugin ids stay enabled for new operators (see settings default).
+ * Third-party-style example: hash (see docs/plugins.md).
  */
 const PLUGINS: ApostlePlugin[] = [
   clockPlugin,
   fetchPagePlugin,
   calcPlugin,
   createMissingPlugin,
+  hashPlugin,
   computerPlugin,
   browserPlugin,
 ];

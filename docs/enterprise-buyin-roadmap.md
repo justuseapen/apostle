@@ -29,10 +29,10 @@ Phosphor remains the public default. SI does not register tools (theme law).
 | 2 | Private corporate chrome matching brand board | Shipped — `data-theme=si` tokens, SI lockup, Inter/Poppins, Signal/Pulse/Halt | **Now** (theme select without fork) | Private skin; not a public catalog |
 | 3 | Tool cards in chat (P1) | **Partial — shipped this slice** — richer ToolCard (args/result/collapse); not streaming AG-UI events | **Next** | Still not a live event bus |
 | 4 | Sandboxed shell + filesystem (P1 / workspace computer) | **Partial — browser Computer spike** — VFS + constrained shell plugin; Artifacts lists files; OPFS / File System Access import | **Next** (browser-first; deepen via Better VM) | **Not** host shell; CLI/desktop deferred; default deny on network stays law |
-| 4b | **Better VM** (clearer sandbox / richer runtime) | Not shipped — next honest step beyond VFS builtins | **Next** | Do **not** promise Firecracker as OSS default |
+| 4b | **Better VM** (clearer sandbox / richer runtime) | Partial — `cp` / `mv` / `grep` builtins on VFS; still not a richer runtime | **Next** | Do **not** promise Firecracker as OSS default |
 | 5 | Firecracker-class isolation proof | Not shipped | **Spike** (enterprise) | Separate from OSS browser Computer / Better VM |
-| 6 | MCP tool bus (search, mail, browser, repo, APIs) | Frozen plugin contract (clock, fetch, calculator, create_missing, **computer**, browser-in-flight) | **Later** | MCP is the intended port |
-| 7 | Allowlisted browser + screenshot trail (P2) | **Partial — shipped this slice** — Browser plugin (Playwright + Desk allowlist + screenshot trail in tool cards / Context → Browser) | **Next** (Browser deepen) | Not Firecracker; sessions in-memory; desktop computer-use deferred |
+| 6 | MCP tool bus (search, mail, browser, repo, APIs) | Frozen plugin contract (clock, fetch, calculator, create_missing, **hash** example, **computer**, **browser**) | **Later** | MCP is the intended port |
+| 7 | Allowlisted browser + screenshot trail (P2) | **Partial** — Browser plugin + Desk session admin + click/type polish | **Next** (Browser deepen) | Not Firecracker; sessions in-memory; desktop computer-use deferred |
 | 8 | Memory drawer (per-user, revocable) (P2) | **Partial — shell only** — right-column Memory drawer stub | **Next** (Memory) | No persistence / revoke yet |
 | 9 | Knowledge / RAG with citations (P2) | **Partial — shell only** — Knowledge drawer stub | **Next** (Knowledge) | Separate from Memory; no corpus |
 | 10 | Human approvals in protocol (P3) | **Partial — UI shell** — ApprovalCard (once / run / deny) local-only; no protocol halt | **Next** (Approvals + Jev router) | Not audited yet |
@@ -42,8 +42,8 @@ Phosphor remains the public default. SI does not register tools (theme law).
 | 13 | Model router (SI-Router / open weights + overflow) | Heuristic label router + desk model map; Ollama/OpenRouter/Grok | **Next** (Jev as typed router) | Overflow metering not productized |
 | 14 | Data plane residency / trust boundary | Local/Postgres operator data; no residency guarantees | **Spike** | Do not promise without infra sign-off |
 | 15 | Multi-user / identity beyond operator | Sign-in is operator-scoped | **Next** (invite users) | Enterprise identity is thicker |
-| 15b | **Thread management** (rename, delete, sort/reorder) | Not shipped — sidebar is create/select only | **Next** | Operator desk hygiene |
-| 15c | **Search through threads** | Not shipped | **Next** | ChatGPT-shaped find-without-scroll |
+| 15b | **Thread management** (rename, delete, sort/reorder) | **Partial — shipped** — chat sidebar rename/delete/up/down; Desk Threads visibility | **Next** polish | Operator desk hygiene |
+| 15c | **Search through threads** | **Partial — shipped** — local title + message content search in sidebar | **Next** polish | ChatGPT-shaped find-without-scroll |
 | 16 | Desktop computer-use + TMTG surface distribution (P4) | Out of scope | **Future / deferred** | Direction only — not a date |
 | 17 | Billing / plans / margin | Not started — **skipped for OSS** | **Deferred / out for OSS** | No Stripe/plans work; free-plan message cap stays a desk control only. Enterprise margin can be sponsored differently if needed. |
 | — | **Hero three-column run layout** | **Partial — shipped this slice** — threads \| chat \| context (xl+) | **Next** polish | Mobile keeps two-pane |

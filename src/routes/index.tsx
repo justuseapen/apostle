@@ -1,10 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Landing } from "@/components/apostle/landing/landing";
+import { Markdown } from "@/components/apostle/markdown";
 import { PhButton, PhInput } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
+import { SlashMenu } from "@/components/apostle/slash-menu";
+import { openOnboarding } from "@/components/apostle/onboarding";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { listMessages, listThreads, sendMessage, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
+import {
+  filterSlashSkills,
+  listSlashSkills,
+  slashQuery,
+  type SlashSkill,
+} from "@/lib/apostle/slash-skills";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -31,6 +40,7 @@ function Home() {
 }
 
 function Chat() {
+  const navigate = useNavigate();
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
@@ -39,7 +49,24 @@ function Chat() {
   const [error, setError] = useState("");
   const [logged, setLogged] = useState("");
   const [openList, setOpenList] = useState(false);
+  const [slashIndex, setSlashIndex] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
+  const allSkills = useMemo(() => listSlashSkills(), []);
+
+  const query = slashQuery(draft);
+  const slashOpen = query !== null;
+  const filtered = useMemo(
+    () => (query === null ? [] : filterSlashSkills(query, allSkills)),
+    [query, allSkills],
+  );
+
+  useEffect(() => {
+    setSlashIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    if (slashIndex >= filtered.length) setSlashIndex(Math.max(0, filtered.length - 1));
+  }, [filtered.length, slashIndex]);
 
   async function refreshThreads() {
     const rows = await listThreads();
@@ -62,6 +89,30 @@ function Chat() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [messages, busy]);
 
+  // Screenshot / smoke helper: window.dispatchEvent(new CustomEvent("apostle:demo-message", { detail: { content, tools? } }))
+  useEffect(() => {
+    const onDemo = (e: Event) => {
+      const detail = (e as CustomEvent<{ content?: string; tools?: Trace[] }>).detail;
+      if (!detail?.content) return;
+      setMessages((m) => [
+        ...m,
+        {
+          id: `demo-${Date.now()}`,
+          role: "assistant",
+          content: detail.content!,
+          meta: JSON.stringify({
+            label: "demo",
+            model: "local",
+            tools: detail.tools,
+          }),
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    };
+    window.addEventListener("apostle:demo-message", onDemo);
+    return () => window.removeEventListener("apostle:demo-message", onDemo);
+  }, []);
+
   async function openThread(id: string) {
     setActive(id);
     setOpenList(false);
@@ -76,9 +127,49 @@ function Chat() {
     setLogged("");
   }
 
+  function applySkill(skill: SlashSkill) {
+    if (skill.kind === "desk") {
+      setDraft("");
+      void navigate({ to: "/admin" });
+      return;
+    }
+    if (skill.kind === "help") {
+      setDraft("");
+      openOnboarding();
+      return;
+    }
+    setDraft(skill.prompt);
+  }
+
+  function onComposerKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (!slashOpen) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setDraft("");
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!filtered.length) return;
+      setSlashIndex((i) => (i + 1) % filtered.length);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!filtered.length) return;
+      setSlashIndex((i) => (i - 1 + filtered.length) % filtered.length);
+      return;
+    }
+    if (e.key === "Enter" && filtered[slashIndex]) {
+      e.preventDefault();
+      applySkill(filtered[slashIndex]!);
+    }
+  }
+
   async function onSend() {
     const text = draft.trim();
     if (!text || busy) return;
+    if (slashOpen) return; // Enter while menu open is handled by keydown select
     setDraft("");
     setBusy(true);
     setError("");
@@ -162,7 +253,8 @@ function Chat() {
                   </p>
                   <p className="mt-3 max-w-md font-mono text-sm leading-relaxed text-ph-dim">
                     Apostle is the install. The desk is where you change the voice and turn plugins
-                    on. Try “what time is it in Aberdeen?” or paste a public https link.
+                    on. Type <span className="text-ph-tool">/</span> for skills, or try “what time
+                    is it in Aberdeen?”
                   </p>
                 </div>
               )}
@@ -189,11 +281,11 @@ function Chat() {
                     <div
                       className={
                         mine
-                          ? "border-2 border-ph-border bg-ph-void px-3 py-2 text-ph-bone"
+                          ? "border-2 border-ph-border bg-ph-void px-3 py-2 text-ph-bone whitespace-pre-wrap"
                           : "leading-relaxed text-ph-bone"
                       }
                     >
-                      {m.content}
+                      {mine ? m.content : <Markdown source={m.content} />}
                     </div>
                   </article>
                 );
@@ -225,19 +317,33 @@ function Chat() {
             className="border-t-2 border-ph-border bg-ph-void p-2.5"
             onSubmit={(e) => {
               e.preventDefault();
+              if (slashOpen) return;
               void onSend();
             }}
           >
-            <div className="mx-auto flex max-w-2xl gap-2">
-              <PhInput
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="› ask anything"
-                className="h-11 flex-1"
+            <div className="relative mx-auto max-w-2xl">
+              <SlashMenu
+                open={slashOpen}
+                skills={filtered}
+                activeIndex={slashIndex}
+                onActiveIndex={setSlashIndex}
+                onSelect={applySkill}
               />
-              <PhButton tone="focus" type="submit" disabled={busy || !draft.trim()} className="h-11 px-5">
-                Send
-              </PhButton>
+              <div className="flex gap-2">
+                <PhInput
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={onComposerKeyDown}
+                  placeholder="› ask anything — / for skills"
+                  className="h-11 flex-1"
+                  autoComplete="off"
+                  aria-autocomplete="list"
+                  aria-expanded={slashOpen}
+                />
+                <PhButton tone="focus" type="submit" disabled={busy || !draft.trim() || slashOpen} className="h-11 px-5">
+                  Send
+                </PhButton>
+              </div>
             </div>
           </form>
         </section>

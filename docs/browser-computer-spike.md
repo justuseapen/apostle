@@ -62,5 +62,6 @@ Without a model that emits tool calls, you can still demo FS via Artifacts **Gra
 ## Related
 
 - Roadmap: README **Next → Computer (browser-first)**; enterprise matrix in `docs/enterprise-buyin-roadmap.md`
-- Internal tech notes: `internal/browser-computer-notes.md`
-- Screenshots: `media/browser-computer-*.png`
+- Browser: `docs/browser-use.md`
+- Demo: `docs/demo-script.md`
+- Repo screenshots: `screenshots/oss-launch-*.png` (Phosphor only)

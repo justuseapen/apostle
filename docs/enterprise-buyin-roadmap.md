@@ -13,7 +13,8 @@ Phosphor remains the public default. SI does not register tools (theme law).
 
 **Evidence:** `media/enterprise-theme-*.png` · `media/missing-tool-desk.png` · `media/hero-gaps-*.png` · `media/browser-computer-*.png` · `media/browser-use-*.png`  
 **Computer spike doc:** `docs/browser-computer-spike.md`  
-**Browser use (in flight on #4):** `docs/browser-use.md`  
+**Browser use (partial on main):** `docs/browser-use.md`  
+**OSS demo script:** `docs/demo-script.md`  
 **OSS launch checklist:** Project store `docs/oss-launch-ready.md`
 
 **File a Missing ask from chat:** tool `create_missing` · slash `/missing` (aliases `file_ask`, `ask`, `gap`). Desk also auto-seeds the buy-in matrix when Missing is empty, and has **Seed enterprise gaps**.
@@ -66,7 +67,7 @@ Phosphor remains the public default. SI does not register tools (theme law).
 - Added **Later** items for background runs, admin audit, MCP bus, observability.
 - Added **Spike** (browser isolation + residency; Firecracker proof) and **Future/deferred** (P4 + CLI/desktop Computer) so the ask’s “UI fiction ≠ ship” line stays visible.
 - **Billing / Stripe / plans** moved off **Now** → **Future / deferred · out for OSS** (master-sync; no Stripe implementation).
-- Browser called **partial — shipped / in flight** on #4 (allowlisted Playwright + screenshot trail).
+- Browser called **partial — shipping on main** (allowlisted Playwright + screenshot trail; #4 merged).
 
 ---
 

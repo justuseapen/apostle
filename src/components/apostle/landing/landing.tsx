@@ -9,7 +9,7 @@ import { ModeToggle } from "@/lib/theme";
 
 const GITHUB = "https://github.com/justuseapen/apostle";
 const INSTALL = `$ npm install
-$ XAI_API_KEY=your-key npm run dev`;
+$ npm run dev`;
 
 const NAV = [
   { key: "1", id: "chat", label: "chat" },
@@ -241,16 +241,20 @@ export function Landing() {
                 WordPress for a chat assistant.
               </p>
               <p className="max-w-xl font-mono text-sm leading-relaxed text-ph-mute">
-                Install it, paste a model key, and you have a product people can talk to. The look
-                is a theme. What it can do is a plugin. When someone asks for something you have not
-                built yet, the desk records it so you can add it.
+                Install it, point at Ollama (or paste a model key), and you have a product people can
+                talk to. The look is a theme. What it can do is a plugin. When someone asks for
+                something you have not built yet, the desk records it so you can add it.
               </p>
 
               <div className="relative border-2 border-ph-border bg-ph-void px-4 py-3 font-mono text-sm">
                 <pre className="text-ph-bone">
                   <span className="text-ph-missing">$</span> npm install{"\n"}
-                  <span className="text-ph-missing">$</span> XAI_API_KEY=
-                  <span className="text-ph-tool">your-key</span> npm run dev
+                  <span className="text-ph-missing">$</span> npm run{" "}
+                  <span className="text-ph-tool">dev</span>
+                  {"\n"}
+                  <span className="text-ph-dim">
+                    # seeds test@apostle.local · disable: APOSTLE_SEED_LOCAL=0
+                  </span>
                 </pre>
                 <button
                   type="button"
@@ -568,7 +572,7 @@ export function Landing() {
                     <li>
                       <span className="text-ph-tool">4.</span>{" "}
                       <span className="text-ph-bone">Computer.</span> Browser VFS + constrained shell
-                      spike in flight. Default deny on the network.
+                      spike shipping (partial — not done). Default deny on the network.
                       <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
                         ↳ not host FS · not Firecracker
                       </p>
@@ -581,7 +585,8 @@ export function Landing() {
                     <li>
                       <span className="text-ph-tool">6.</span>{" "}
                       <span className="text-ph-bone">Knowledge / Memory / Browser / Approvals /
-                      Jev.</span> Corpus, facts, allowlisted browse trail, HITL, decision router.
+                      Jev.</span> Corpus, facts, allowlisted browse trail (partial), HITL, decision
+                      router. Browser is not “done.”
                     </li>
                   </ol>
                 </div>
@@ -639,18 +644,24 @@ export function Landing() {
                 <span className="text-ph-missing">$</span> npm install
               </p>
               <p>
-                <span className="text-ph-missing">$</span> XAI_API_KEY=
-                <span className="text-ph-tool">your-key</span> npm run dev
+                <span className="text-ph-missing">$</span> npm run{" "}
+                <span className="text-ph-tool">dev</span>
               </p>
               <p className="text-ph-dim">
-                → listening on <span className="text-ph-bone">http://localhost:8080</span>
+                → <span className="text-ph-bone">http://localhost:8080</span> · PGLite seeds Ollama +{" "}
+                <span className="text-ph-bone">test@apostle.local</span> /{" "}
+                <span className="text-ph-bone">password123</span>
               </p>
               <p className="pt-2 text-ph-dim">
-                # no DATABASE_URL? embedded postgres. it resets when the process stops.
+                # re-seed: <span className="text-ph-bone">npm run seed</span> · disable:{" "}
+                <span className="text-ph-bone">APOSTLE_SEED_LOCAL=0</span>
               </p>
-              <p className="text-ph-dim"># set DATABASE_URL for anything you want to keep.</p>
               <p className="text-ph-dim">
-                # sign-in: google or x via hosted broker. email + password is the local fallback.
+                # optional cloud key:{" "}
+                <span className="text-ph-bone">XAI_API_KEY=… npm run dev</span>
+              </p>
+              <p className="text-ph-dim">
+                # no DATABASE_URL? embedded postgres resets when the process stops.
               </p>
             </div>
           </Tile>

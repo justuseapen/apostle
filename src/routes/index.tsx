@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { Landing } from "@/components/apostle/landing/landing";
 import { PhButton, PhInput } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
@@ -199,7 +199,21 @@ function Chat() {
                 );
               })}
               {busy && <p className="text-sm text-ph-tool">Working…</p>}
-              {error && <p className="text-sm text-ph-missing">{error}</p>}
+              {error && (
+                <div className="space-y-2 border-2 border-ph-missing bg-ph-tile px-3 py-3 text-sm text-ph-missing">
+                  <p>{error}</p>
+                  {/DESK|model key|gateway/i.test(error) && (
+                    <p>
+                      <Link
+                        to="/admin"
+                        className="font-mono tracking-wide text-ph-tool uppercase underline-offset-2 hover:underline"
+                      >
+                        Set gateway on DESK →
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              )}
               {logged && (
                 <p className="border-2 border-ph-missing bg-ph-tile px-3 py-2 text-sm text-ph-missing">
                   Logged on the desk: {logged}. Nothing installed can do that yet.

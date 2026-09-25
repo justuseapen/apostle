@@ -8,6 +8,8 @@ import {
   pickDirectoryImport,
 } from "@/lib/apostle/computer/browser-fs.ts";
 import {
+  closeBrowserSession,
+  getBrowserSession,
   importComputerFiles,
   listBrowserTrail,
   listComputerArtifacts,
@@ -131,18 +133,24 @@ function BrowserTrailDrawer({
   const [items, setItems] = useState<BrowserTrailItem[]>([]);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [session, setSession] = useState<{ open: boolean; url?: string; title?: string }>({
+    open: false,
+  });
 
   const refresh = useCallback(async () => {
     if (!threadId) {
       setItems([]);
+      setSession({ open: false });
       return;
     }
     setBusy(true);
     try {
-      const res = await listBrowserTrail({
-        data: { threadId, includeData: true },
-      });
+      const [res, sess] = await Promise.all([
+        listBrowserTrail({ data: { threadId, includeData: true } }),
+        getBrowserSession({ data: { threadId } }),
+      ]);
       setItems(res.items);
+      setSession(sess);
       setStatus("");
     } catch {
       setStatus("Could not load screenshot trail.");
@@ -182,7 +190,23 @@ function BrowserTrailDrawer({
         >
           Refresh
         </button>
+        <button
+          type="button"
+          disabled={busy || !threadId || !session.open}
+          onClick={() =>
+            void closeBrowserSession({ data: { threadId } }).then(() => refresh())
+          }
+          className="border-2 border-ph-border px-2 py-1 text-[0.65rem] tracking-wide text-ph-dim uppercase hover:border-ph-missing disabled:opacity-40"
+        >
+          Close session
+        </button>
       </div>
+
+      {session.open && (
+        <p className="mt-2 truncate text-[0.65rem] text-ph-tool">
+          Live · {session.title || "(no title)"} · {session.url}
+        </p>
+      )}
 
       {!threadId && (
         <p className="mt-3 text-ph-dim">Send a message to open a thread trail.</p>
@@ -310,8 +334,10 @@ function ArtifactsDrawer({
       hint="Computer VFS · browser sandbox · at your own risk"
     >
       <p className="text-ph-dim leading-relaxed">
-        Workspace files for this thread. Not your Mac disk unless you grant a folder.
-        Shell is constrained builtins — no host processes.
+        Workspace files for this thread ({files.length}). Not your Mac disk unless you grant a
+        folder. Shell builtins include ls/cat/cp/mv/grep — no host processes. Try{" "}
+        <span className="text-ph-tool">/computer</span> then{" "}
+        <span className="text-ph-bone">run: ls</span>.
       </p>
       <details className="mt-2 border-2 border-ph-border bg-ph-void">
         <summary className="cursor-pointer px-2 py-1.5 text-[0.65rem] tracking-wide text-ph-warn uppercase">

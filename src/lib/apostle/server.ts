@@ -18,7 +18,13 @@ import {
 } from "@/lib/apostle/gateway";
 import { seedEnterpriseGaps as seedGapsRows, upsertGap } from "@/lib/apostle/gaps";
 
-export type ThreadRow = { id: string; title: string; created_at: string };
+export type ThreadRow = {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at?: string;
+  sort_order?: number;
+};
 export type MessageRow = {
   id: string;
   role: string;
@@ -167,9 +173,11 @@ export const listThreads = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     return sql<ThreadRow>`
-      select id, title, created_at::text as created_at
+      select id, title, created_at::text as created_at,
+             coalesce(updated_at, created_at)::text as updated_at,
+             coalesce(sort_order, 0)::int as sort_order
       from threads where user_id = ${context.userId}
-      order by created_at desc
+      order by coalesce(sort_order, 0) asc, coalesce(updated_at, created_at) desc
     `;
   });
 
@@ -182,11 +190,107 @@ export const createThread = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
     const id = crypto.randomUUID();
+    const top = await sql<{ n: number }>`
+      select coalesce(min(sort_order), 0)::int as n from threads where user_id = ${context.userId}
+    `;
+    const sortOrder = (top[0]?.n ?? 0) - 1;
     await sql`
-      insert into threads (id, user_id, title)
-      values (${id}, ${context.userId}, ${data.title})
+      insert into threads (id, user_id, title, sort_order, updated_at)
+      values (${id}, ${context.userId}, ${data.title}, ${sortOrder}, now())
     `;
     return { id, title: data.title };
+  });
+
+/** Rename a thread (operator hygiene). */
+export const renameThread = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string; title: string }) => ({
+    id: (input.id || "").slice(0, 80),
+    title: (input.title || "").trim().slice(0, 80) || "Untitled",
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const rows = await sql<{ id: string }>`
+      update threads
+      set title = ${data.title}, updated_at = now()
+      where id = ${data.id} and user_id = ${context.userId}
+      returning id
+    `;
+    if (!rows[0]) return { ok: false as const, error: "Thread not found." };
+    return { ok: true as const, id: data.id, title: data.title };
+  });
+
+/** Delete a thread and its messages / related workspace rows. */
+export const deleteThread = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string }) => ({
+    id: (input.id || "").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const owned = await sql<{ id: string }>`
+      select id from threads where id = ${data.id} and user_id = ${context.userId}
+    `;
+    if (!owned[0]) return { ok: false as const, error: "Thread not found." };
+    await sql`delete from messages where thread_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from computer_files where thread_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from browser_screenshots where thread_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from threads where id = ${data.id} and user_id = ${context.userId}`;
+    return { ok: true as const, id: data.id };
+  });
+
+/** Reorder sidebar threads — ids in desired top→bottom order. */
+export const reorderThreads = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { ids: string[] }) => ({
+    ids: (input.ids || []).map((id) => String(id).slice(0, 80)).slice(0, 200),
+  }))
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    let i = 0;
+    for (const id of data.ids) {
+      await sql`
+        update threads
+        set sort_order = ${i}, updated_at = coalesce(updated_at, now())
+        where id = ${id} and user_id = ${context.userId}
+      `;
+      i += 1;
+    }
+    return { ok: true as const, count: data.ids.length };
+  });
+
+/** Search threads by title or message content (local operator scope). */
+export const searchThreads = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { query: string }) => ({
+    query: (input.query || "").trim().slice(0, 120),
+  }))
+  .handler(async ({ context, data }) => {
+    const q = data.query;
+    if (q.length < 1) {
+      return { threads: [] as (ThreadRow & { snippet: string | null })[], query: "" };
+    }
+    const sql = await getSql();
+    const like = `%${q.replace(/[%_]/g, "")}%`;
+    const rows = await sql<ThreadRow & { snippet: string | null }>`
+      select distinct t.id, t.title,
+             t.created_at::text as created_at,
+             coalesce(t.updated_at, t.created_at)::text as updated_at,
+             coalesce(t.sort_order, 0)::int as sort_order,
+             (
+               select left(m.content, 120) from messages m
+               where m.thread_id = t.id and m.user_id = ${context.userId}
+                 and m.content ilike ${like}
+               order by m.created_at desc limit 1
+             ) as snippet
+      from threads t
+      left join messages m on m.thread_id = t.id and m.user_id = ${context.userId}
+      where t.user_id = ${context.userId}
+        and (t.title ilike ${like} or m.content ilike ${like})
+      order by coalesce(t.sort_order, 0) asc, coalesce(t.updated_at, t.created_at) desc
+      limit 40
+    `;
+    return { threads: rows, query: q };
   });
 
 export const listMessages = createServerFn({ method: "POST" })
@@ -353,7 +457,8 @@ export const sendMessage = createServerFn({ method: "POST" })
       threadId = crypto.randomUUID();
       const title = data.text.slice(0, 72);
       await sql`
-        insert into threads (id, user_id, title) values (${threadId}, ${context.userId}, ${title})
+        insert into threads (id, user_id, title, sort_order, updated_at)
+        values (${threadId}, ${context.userId}, ${title}, 0, now())
       `;
     }
 
@@ -361,6 +466,10 @@ export const sendMessage = createServerFn({ method: "POST" })
     await sql`
       insert into messages (id, thread_id, user_id, role, content)
       values (${userMsgId}, ${threadId}, ${context.userId}, 'user', ${data.text})
+    `;
+    await sql`
+      update threads set updated_at = now()
+      where id = ${threadId} and user_id = ${context.userId}
     `;
 
     const history = await sql<{ role: string; content: string }>`
@@ -728,4 +837,36 @@ export const runBrowserTool = createServerFn({ method: "POST" })
       threadId: data.threadId,
     });
     return { ok: true as const, result, threadId: data.threadId };
+  });
+
+/** Live Playwright session status for Desk / Context (in-memory; dies on restart). */
+export const getBrowserSession = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null } = {}) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    const { sessionInfo } = await import("./browser/session.ts");
+    const info = sessionInfo(context.userId, data.threadId);
+    return { threadId: data.threadId, ...info };
+  });
+
+/** Close the in-memory Playwright session for a thread (Desk admin). */
+export const closeBrowserSession = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId?: string | null } = {}) => ({
+    threadId: (input.threadId || "default").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    const { closeSession } = await import("./browser/session.ts");
+    const closed = await closeSession(context.userId, data.threadId);
+    return { ok: true as const, closed, threadId: data.threadId };
+  });
+
+/** List open in-memory browser sessions for this operator (Desk status). */
+export const listBrowserSessions = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { listSessionsForUser } = await import("./browser/session.ts");
+    return { sessions: listSessionsForUser(context.userId) };
   });

@@ -11,6 +11,7 @@ describe("slash skills", () => {
     assert.ok(ids.includes("create_missing"));
     assert.ok(ids.includes("computer"));
     assert.ok(ids.includes("browser"));
+    assert.ok(ids.includes("hash"));
     assert.ok(ids.includes("desk"));
     assert.ok(ids.includes("help"));
   });
@@ -40,5 +41,7 @@ describe("slash skills", () => {
     assert.ok(computer.some((s) => s.id === "computer"));
     const browse = filterSlashSkills("browse");
     assert.ok(browse.some((s) => s.id === "browser"));
+    const hash = filterSlashSkills("sha256");
+    assert.ok(hash.some((s) => s.id === "hash"));
   });
 });

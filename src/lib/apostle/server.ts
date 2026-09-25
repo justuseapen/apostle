@@ -397,7 +397,14 @@ export const sendMessage = createServerFn({ method: "POST" })
       values (${crypto.randomUUID()}, ${context.userId}, ${threadId}, ${model}, ${decision.label}, ${tokensIn}, ${tokensOut})
     `;
 
-    const gap = await noteGap(gateway, context.userId, data.text, answer, traces.map((t) => t.name));
+    const gap = await noteGap(
+      gateway,
+      model,
+      context.userId,
+      data.text,
+      answer,
+      traces.map((t) => t.name),
+    );
 
     return {
       ok: true as const,
@@ -424,6 +431,7 @@ function slugify(title: string) {
 
 async function noteGap(
   gateway: GatewayResolved,
+  model: string,
   userId: string,
   ask: string,
   answer: string,
@@ -431,7 +439,7 @@ async function noteGap(
 ): Promise<string | null> {
   try {
     const res = await chatCompletions(gateway, {
-      model: "grok-4.5",
+      model,
       temperature: 0,
       max_tokens: 80,
       messages: [

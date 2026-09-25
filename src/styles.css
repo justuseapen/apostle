@@ -1,32 +1,268 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #12110e;
-  --color-paper: #f4f0e6;
-  --color-bone: #ebe4d4;
-  --color-line: #d6cdbd;
-  --color-mute: #6f675c;
-  --color-signal: #c2410c;
-  --color-signal-ink: #fff7f2;
-  --color-ok: #2f5d3a;
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --radius: 0.9rem;
+  /* Phosphor — product theme (DESIGN.LANG). Dark defaults; light via [data-mode=light]. */
+  --color-ph-void: #0b0c10;
+  --color-ph-tile: #111318;
+  --color-ph-term: #0e1014;
+  --color-ph-raise: #1b1e25;
+  --color-ph-border: #262a33;
+  --color-ph-line2: #2e333d;
+  --color-ph-dim: #8a8f98;
+  --color-ph-mute: #c9c4b8;
+  --color-ph-bone: #e6e1d6;
+  --color-ph-on: #0b0c10;
+  --color-ph-focus: oklch(0.8 0.16 70);
+  --color-ph-missing: oklch(0.78 0.16 350);
+  --color-ph-tool: oklch(0.8 0.13 195);
+  --color-ph-warn: oklch(0.82 0.14 85);
+  --color-ph-scan: rgb(0 0 0 / 0.22);
+
+  /* Canonical aliases used across app chrome */
+  --color-void: var(--color-ph-void);
+  --color-tile: var(--color-ph-tile);
+  --color-border: var(--color-ph-border);
+  --color-dim: var(--color-ph-dim);
+  --color-mute: var(--color-ph-mute);
+  --color-bone: var(--color-ph-bone);
+  --color-focus: var(--color-ph-focus);
+  --color-missing: var(--color-ph-missing);
+  --color-tool: var(--color-ph-tool);
+  --color-warn: var(--color-ph-warn);
+
+  --font-sans: "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "VT323", ui-monospace, monospace;
+  --font-marginalia: "Instrument Serif", ui-serif, Georgia, serif;
+  --radius: 0;
+}
+
+/* Light Phosphor — tokens from Apostle Landing design zip (mode: light) */
+html[data-mode="light"] {
+  --color-ph-void: #dde3ec;
+  --color-ph-tile: #fafbfc;
+  --color-ph-term: #eef0f3;
+  --color-ph-raise: #e6e9ee;
+  --color-ph-border: #1a1d23;
+  --color-ph-line2: #9aa1ad;
+  --color-ph-dim: #565c67;
+  --color-ph-mute: #2c3038;
+  --color-ph-bone: #0d0f13;
+  --color-ph-on: #ffffff;
+  --color-ph-focus: oklch(0.5 0.2 262);
+  --color-ph-missing: oklch(0.56 0.25 350);
+  --color-ph-tool: oklch(0.55 0.13 215);
+  --color-ph-warn: oklch(0.55 0.14 85);
+  --color-ph-scan: rgb(0 10 30 / 0.05);
 }
 
 @layer base {
   html,
   body {
-    background: var(--color-paper);
-    color: var(--color-ink);
+    background: var(--color-ph-void);
+    color: var(--color-ph-bone);
     font-family: var(--font-sans);
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  ::selection {
+    background: var(--color-ph-missing);
+    color: var(--color-ph-on);
+  }
 }
 
 @utility font-display {
   font-family: var(--font-display);
+}
+
+@utility font-marginalia {
+  font-family: var(--font-marginalia);
+}
+
+/* Phosphor surface — landing + signed-in chrome share this */
+.phosphor {
+  font-family: var(--font-sans);
+  color: var(--color-ph-bone);
+  background: var(--color-ph-void);
+}
+
+.phosphor .font-display,
+.font-display {
+  font-family: var(--font-display);
+}
+
+.phosphor .font-mono,
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.phosphor .font-marginalia,
+.font-marginalia {
+  font-family: var(--font-marginalia);
+}
+
+.ph-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--color-ph-scan) 2px,
+    var(--color-ph-scan) 3px
+  );
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+}
+
+html[data-mode="dark"] .ph-scanlines {
+  opacity: 0.35;
+  mix-blend-mode: normal;
+}
+
+.ph-scan-fill {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--color-ph-scan) 2px,
+    var(--color-ph-scan) 3px
+  );
+}
+
+.ph-glitch::before,
+.ph-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ph-glitch::before {
+  color: var(--color-ph-tool);
+  transform: translate(-3px, 0);
+  z-index: 1;
+  opacity: 0.85;
+}
+
+.ph-glitch::after {
+  color: var(--color-ph-missing);
+  transform: translate(3px, 0);
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.ph-marquee {
+  display: inline-block;
+  animation: ph-marquee 28s linear infinite;
+}
+
+.ph-swatch {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    var(--color-ph-scan) 3px,
+    var(--color-ph-scan) 4px
+  );
+}
+
+@keyframes ph-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-marquee {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Super Intelligence (private) — TMTG brand board tokens.
+   Selected via data-theme="si". Does not alter Phosphor defaults.
+   Source: Buy-in design set · Brand Board (Signal / Pulse / Void / Bone).
+   ------------------------------------------------------------------ */
+html[data-theme="si"] {
+  --color-ph-void: #07070c;
+  --color-ph-tile: #0b0a18;
+  --color-ph-term: #0b0a18;
+  --color-ph-raise: #1a1830;
+  --color-ph-border: #2a2838;
+  --color-ph-line2: #3a3848;
+  --color-ph-dim: #8a8680;
+  --color-ph-mute: #a8a49c;
+  --color-ph-bone: #ede8dc;
+  --color-ph-on: #07070c;
+  --color-ph-focus: #5448ee; /* Signal — primary action / agent */
+  --color-ph-missing: #ff4775; /* Halt — blocked / policy */
+  --color-ph-tool: #2feecc; /* Pulse — live run / streaming */
+  --color-ph-scan: rgb(0 0 0 / 0.18);
+  --color-ph-warn: #f5c542; /* Warn — approval needed */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", "Inter", ui-sans-serif, sans-serif;
+  --font-marginalia: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius: 10px;
+}
+
+html[data-theme="si"][data-mode="light"] {
+  --color-ph-void: #ffffff;
+  --color-ph-tile: #f6f4ef;
+  --color-ph-term: #f6f4ef;
+  --color-ph-raise: #ebe7df;
+  --color-ph-border: #d4d0c6;
+  --color-ph-line2: #b8b3a8;
+  --color-ph-dim: #6e6a64;
+  --color-ph-mute: #4a4640;
+  --color-ph-bone: #08051b;
+  --color-ph-on: #ffffff;
+  --color-ph-focus: #5448ee;
+  --color-ph-missing: #ff4775;
+  --color-ph-tool: #0d9f8a;
+  --color-ph-scan: rgb(8 5 27 / 0.04);
+  --color-ph-warn: #c4920a;
+}
+
+html[data-theme="si"] .ph-scanlines {
+  display: none;
+}
+
+html[data-theme="si"] .phosphor {
+  font-family: var(--font-sans);
+}
+
+/* Soft radius for SI tiles/controls — Phosphor stays square via --radius: 0 */
+html[data-theme="si"] .border-2,
+html[data-theme="si"] section.border-2,
+html[data-theme="si"] button.border-2,
+html[data-theme="si"] input.border-2,
+html[data-theme="si"] textarea.border-2,
+html[data-theme="si"] select {
+  border-radius: var(--radius);
+}
+
+@keyframes si-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.si-pulse-dot {
+  animation: si-pulse 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .si-pulse-dot {
+    animation: none;
+  }
 }

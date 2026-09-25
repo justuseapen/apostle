@@ -1,20 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Signed-in product chrome (paper / cream) */
-  --color-ink: #12110e;
-  --color-paper: #f4f0e6;
-  --color-bone: #ebe4d4;
-  --color-line: #d6cdbd;
-  --color-mute: #6f675c;
-  --color-signal: #c2410c;
-  --color-signal-ink: #fff7f2;
-  --color-ok: #2f5d3a;
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --radius: 0.9rem;
-
-  /* Phosphor landing theme (DESIGN.LANG) */
+  /* Phosphor — product theme (DESIGN.LANG) */
   --color-ph-void: #0b0c10;
   --color-ph-tile: #111318;
   --color-ph-border: #262a33;
@@ -24,16 +11,30 @@
   --color-ph-focus: #fea92f;
   --color-ph-missing: #ff89c6;
   --color-ph-tool: #2ad6d8;
-  --font-ph-display: "VT323", ui-monospace, monospace;
-  --font-ph-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-ph-marginalia: "Instrument Serif", ui-serif, Georgia, serif;
+
+  /* Canonical aliases used across app chrome */
+  --color-void: #0b0c10;
+  --color-tile: #111318;
+  --color-border: #262a33;
+  --color-dim: #8a8a98;
+  --color-mute: #9a9aaa;
+  --color-bone: #e6e6e6;
+  --color-focus: #fea92f;
+  --color-missing: #ff89c6;
+  --color-tool: #2ad6d8;
+
+  --font-sans: "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "VT323", ui-monospace, monospace;
+  --font-marginalia: "Instrument Serif", ui-serif, Georgia, serif;
+  --radius: 0;
 }
 
 @layer base {
   html,
   body {
-    background: var(--color-paper);
-    color: var(--color-ink);
+    background: var(--color-ph-void);
+    color: var(--color-ph-bone);
     font-family: var(--font-sans);
   }
   button:not(:disabled),
@@ -46,23 +47,30 @@
   font-family: var(--font-display);
 }
 
-/* Phosphor landing scope — does not restyle signed-in chat/desk */
+@utility font-marginalia {
+  font-family: var(--font-marginalia);
+}
+
+/* Phosphor surface — landing + signed-in chrome share this */
 .phosphor {
-  font-family: var(--font-ph-mono);
+  font-family: var(--font-sans);
   color: var(--color-ph-bone);
   background: var(--color-ph-void);
 }
 
-.phosphor .font-display {
-  font-family: var(--font-ph-display);
+.phosphor .font-display,
+.font-display {
+  font-family: var(--font-display);
 }
 
-.phosphor .font-mono {
-  font-family: var(--font-ph-mono);
+.phosphor .font-mono,
+.font-mono {
+  font-family: var(--font-mono);
 }
 
-.phosphor .font-marginalia {
-  font-family: var(--font-ph-marginalia);
+.phosphor .font-marginalia,
+.font-marginalia {
+  font-family: var(--font-marginalia);
 }
 
 .ph-scanlines {

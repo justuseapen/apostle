@@ -65,13 +65,13 @@ export function SignInGate({
 
 export function SignInButtons() {
   return (
-    <div className="flex w-full max-w-sm flex-col gap-2">
+    <div className="flex w-full max-w-sm flex-col gap-2.5">
       {GROK_PROVIDERS.map((p) => (
         <button
           key={p.providerId}
           type="button"
           onClick={() => signIn(p.providerId, { callbackURL: "/" })}
-          className="w-full cursor-pointer rounded-md border border-neutral-300 px-4 py-2 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          className="h-11 w-full border-2 border-ph-focus bg-ph-focus px-4 font-mono text-xs tracking-wide text-ph-void uppercase"
         >
           Continue with {p.label}
         </button>
@@ -100,19 +100,19 @@ export function UserButton() {
   if (!user) return null;
   const label = user.displayName ?? user.primaryEmail ?? "Account";
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 font-mono text-xs">
       {user.profileImageUrl ? (
         <img
           src={user.profileImageUrl}
           alt=""
-          className="h-8 w-8 rounded-full object-cover"
+          className="h-7 w-7 border-2 border-ph-border object-cover"
         />
       ) : (
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-black/10 text-sm font-medium dark:bg-white/20">
+        <span className="grid h-7 w-7 place-items-center border-2 border-ph-border bg-ph-tile text-[0.7rem] text-ph-bone">
           {label.charAt(0).toUpperCase()}
         </span>
       )}
-      <span className="text-sm font-medium">{label}</span>
+      <span className="max-w-[8rem] truncate text-ph-dim">{label}</span>
       {authEnabled && !gateSession && (
         <button
           type="button"
@@ -122,9 +122,9 @@ export function UserButton() {
             // Success navigates away; on failure re-enable so it can be retried.
             void signOut().catch(() => setSigningOut(false));
           }}
-          className="cursor-pointer text-sm underline-offset-4 opacity-70 hover:underline disabled:cursor-wait disabled:no-underline"
+          className="border-2 border-ph-border px-2 py-1 tracking-wide text-ph-dim uppercase hover:border-ph-bone hover:text-ph-bone disabled:cursor-wait disabled:opacity-50"
         >
-          {signingOut ? "Signing out…" : "Sign out"}
+          {signingOut ? "…" : "OUT"}
         </button>
       )}
     </div>

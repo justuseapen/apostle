@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { Tile, TileHead } from "@/components/apostle/phosphor";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
 
 const GITHUB = "https://github.com/justuseapen/apostle";
@@ -92,40 +93,6 @@ function GlitchTitle({
     <span className={`ph-glitch relative inline-block ${className}`} data-text={text}>
       <span className="relative z-[2] text-ph-bone">{text}</span>
     </span>
-  );
-}
-
-function Tile({
-  children,
-  className = "",
-  focus,
-  tool,
-  missing,
-}: {
-  children: ReactNode;
-  className?: string;
-  focus?: boolean;
-  tool?: boolean;
-  missing?: boolean;
-}) {
-  const ring = focus
-    ? "border-ph-focus"
-    : tool
-      ? "border-ph-tool"
-      : missing
-        ? "border-ph-missing"
-        : "border-ph-border";
-  return (
-    <section className={`border-2 bg-ph-tile ${ring} ${className}`}>{children}</section>
-  );
-}
-
-function TileHead({ left, right }: { left: string; right?: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 border-b-2 border-ph-border px-3 py-2 font-mono text-[0.68rem] tracking-wide text-ph-dim uppercase">
-      <span>{left}</span>
-      {right ? <span>{right}</span> : null}
-    </div>
   );
 }
 

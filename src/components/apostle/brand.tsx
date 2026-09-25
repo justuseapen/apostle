@@ -45,16 +45,8 @@ export function BrandLockup({
       <span className={`inline-flex items-center gap-2 ${className}`}>
         <SiMark size={compact ? 22 : 28} />
         <span className="leading-tight">
-          <span className="block font-display text-[0.95rem] font-bold tracking-tight text-ph-bone">
-            {compact ? (
-              <>
-                SUPER<span className="font-medium text-ph-dim">·SI</span>
-              </>
-            ) : (
-              <>
-                SUPER <span className="font-medium text-ph-dim">INTELLIGENCE</span>
-              </>
-            )}
+          <span className="block font-display text-[0.8rem] font-bold tracking-tight text-ph-bone sm:text-[0.95rem]">
+            SUPER <span className="font-medium text-ph-dim">INTELLIGENCE</span>
           </span>
           {!compact ? (
             <span className="block font-mono text-[0.58rem] tracking-[0.18em] text-ph-dim uppercase">

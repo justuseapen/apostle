@@ -20,6 +20,9 @@ function Gate() {
               Continue with {p.label}
             </button>
           ))}
+          <Link to="/" className="text-center text-sm text-mute underline-offset-4 hover:underline">
+            Back to landing
+          </Link>
         </div>
       </div>
     </main>

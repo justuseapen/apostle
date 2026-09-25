@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Landing } from "@/components/apostle/landing/landing";
 import { Shell } from "@/components/apostle/shell";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { listMessages, listThreads, sendMessage, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
 
-export const Route = createFileRoute("/")({ component: Chat });
+export const Route = createFileRoute("/")({ component: Home });
 
 type Trace = { name: string; result: string };
 type Meta = { label?: string; reason?: string; model?: string; tools?: Trace[] };
@@ -15,6 +17,16 @@ function readMeta(raw: string | null): Meta {
   } catch {
     return {};
   }
+}
+
+function Home() {
+  const { user, isPending } = useCurrentUserState();
+  // Pending: show the public Phosphor landing (not a blank void) so hard-reload
+  // and signed-out visitors never land on an empty frame. Signed-in swaps to chat.
+  if (isPending || !user) {
+    return <Landing />;
+  }
+  return <Chat />;
 }
 
 function Chat() {

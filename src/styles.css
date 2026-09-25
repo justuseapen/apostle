@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Signed-in product chrome (paper / cream) */
   --color-ink: #12110e;
   --color-paper: #f4f0e6;
   --color-bone: #ebe4d4;
@@ -12,6 +13,20 @@
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, serif;
   --radius: 0.9rem;
+
+  /* Phosphor landing theme (DESIGN.LANG) */
+  --color-ph-void: #0b0c10;
+  --color-ph-tile: #111318;
+  --color-ph-border: #262a33;
+  --color-ph-dim: #8a8a98;
+  --color-ph-mute: #9a9aaa;
+  --color-ph-bone: #e6e6e6;
+  --color-ph-focus: #fea92f;
+  --color-ph-missing: #ff89c6;
+  --color-ph-tool: #2ad6d8;
+  --font-ph-display: "VT323", ui-monospace, monospace;
+  --font-ph-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-ph-marginalia: "Instrument Serif", ui-serif, Georgia, serif;
 }
 
 @layer base {
@@ -29,4 +44,96 @@
 
 @utility font-display {
   font-family: var(--font-display);
+}
+
+/* Phosphor landing scope — does not restyle signed-in chat/desk */
+.phosphor {
+  font-family: var(--font-ph-mono);
+  color: var(--color-ph-bone);
+  background: var(--color-ph-void);
+}
+
+.phosphor .font-display {
+  font-family: var(--font-ph-display);
+}
+
+.phosphor .font-mono {
+  font-family: var(--font-ph-mono);
+}
+
+.phosphor .font-marginalia {
+  font-family: var(--font-ph-marginalia);
+}
+
+.ph-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgb(0 0 0 / 0.18) 2px,
+    rgb(0 0 0 / 0.18) 3px
+  );
+  opacity: 0.35;
+}
+
+.ph-scan-fill {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgb(0 0 0 / 0.12) 2px,
+    rgb(0 0 0 / 0.12) 3px
+  );
+}
+
+.ph-glitch::before,
+.ph-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ph-glitch::before {
+  color: var(--color-ph-tool);
+  transform: translate(-3px, 0);
+  z-index: 1;
+  opacity: 0.85;
+}
+
+.ph-glitch::after {
+  color: var(--color-ph-missing);
+  transform: translate(3px, 0);
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.ph-marquee {
+  display: inline-block;
+  animation: ph-marquee 28s linear infinite;
+}
+
+.ph-swatch {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgb(0 0 0 / 0.25) 3px,
+    rgb(0 0 0 / 0.25) 4px
+  );
+}
+
+@keyframes ph-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-marquee {
+    animation: none;
+  }
 }

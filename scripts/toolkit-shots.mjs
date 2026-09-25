@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Toolkit hardening screenshots → store media/toolkit-*.png (Phosphor only).
+ * Toolkit hardening screenshots → store media/toolkit-*.png (Phosphor only for promo).
  */
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -36,27 +36,35 @@ async function dismissOnboarding(page) {
 }
 
 async function signIn(page) {
-  await page.goto(`${BASE}/login`);
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
   await page.evaluate(() => {
     localStorage.removeItem("apostle.onboarding.seen");
     localStorage.setItem("apostle-theme", "phosphor");
   });
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Password").fill(password);
-  await page.getByRole("button", { name: /Sign in|Log in|Continue/i }).first().click();
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForTimeout(400);
+  await page.locator('input[type="email"]').click();
+  await page.locator('input[type="email"]').fill("");
+  await page.locator('input[type="email"]').pressSequentially(email, { delay: 15 });
+  await page.locator('input[type="password"]').click();
+  await page.locator('input[type="password"]').fill("");
+  await page.locator('input[type="password"]').pressSequentially(password, { delay: 15 });
+  await page.getByRole("button", { name: /Sign in/i }).click();
   await page.waitForTimeout(1500);
   if (page.url().includes("login")) {
     const need = page.getByRole("button", { name: /Need an account/i });
     if (await need.isVisible().catch(() => false)) {
       await need.click();
       await page.getByPlaceholder("Name").fill("Toolkit");
-      await page.getByPlaceholder("Email").fill(email);
-      await page.getByPlaceholder("Password").fill(password);
+      await page.locator('input[type="email"]').pressSequentially(email, { delay: 15 });
+      await page.locator('input[type="password"]').pressSequentially(password, { delay: 15 });
       await page.getByRole("button", { name: /Create account/i }).click();
       await page.waitForTimeout(2000);
     }
   }
-  await page.waitForURL((u) => !u.pathname.includes("login"), { timeout: 45000 });
+  await page.waitForFunction(() => !location.pathname.includes("login"), null, {
+    timeout: 45000,
+  });
   await dismissOnboarding(page);
 }
 
@@ -66,41 +74,31 @@ async function main() {
 
   await signIn(page);
 
-  // Chat with thread search chrome
-  await page.goto(`${BASE}/?theme=phosphor`);
+  await page.goto(`${BASE}/?theme=phosphor`, { waitUntil: "networkidle" });
   await dismissOnboarding(page);
   await page.waitForTimeout(800);
   await shot(page, "chat-threads");
 
-  // Desk overview / status chrome
-  await page.goto(`${BASE}/admin`);
+  await page.goto(`${BASE}/admin`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
   await shot(page, "desk-overview");
 
-  // Plugins section (Hash visible)
   await page.getByRole("button", { name: /^Plugins$/i }).click();
   await page.waitForTimeout(500);
   await shot(page, "desk-plugins");
 
-  // Browser section
   await page.getByRole("button", { name: /^Browser$/i }).click();
   await page.waitForTimeout(500);
   await shot(page, "desk-browser");
 
-  // Theme section — Ink listed (SI private)
   await page.getByRole("button", { name: /^Theme$/i }).click();
   await page.waitForTimeout(500);
   await shot(page, "desk-theme");
 
-  // Ink theme smoke (public) — still write as toolkit-ink for author path
-  await page.goto(`${BASE}/?theme=ink`);
+  await page.goto(`${BASE}/?theme=ink`, { waitUntil: "networkidle" });
   await dismissOnboarding(page);
   await page.waitForTimeout(800);
   await shot(page, "ink-chat");
-
-  // Back to Phosphor for any further promo
-  await page.goto(`${BASE}/?theme=phosphor`);
-  await page.waitForTimeout(400);
 
   await browser.close();
   console.log("done →", MEDIA);

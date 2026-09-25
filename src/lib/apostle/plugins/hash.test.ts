@@ -10,8 +10,9 @@ describe("hash plugin", () => {
   });
 
   it("digests sha256 of hello", async () => {
+    const expected = await digestText("hello", "sha256");
     const out = await hashPlugin.run({ text: "hello" });
-    assert.equal(out, `sha256: ${digestText("hello", "sha256")}`);
+    assert.equal(out, `sha256: ${expected}`);
     assert.match(out, /^sha256: [a-f0-9]{64}$/);
   });
 

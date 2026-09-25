@@ -221,7 +221,21 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
  */
 export function ensureDbReady(): Promise<void> {
   if (dbSource !== "pglite") return Promise.resolve();
-  return getSql().then(() => undefined);
+  return getSql().then(async (sql) => {
+    // Local Ollama + test user — idempotent; skip with APOSTLE_SEED_LOCAL=0.
+    try {
+      const { shouldSeedLocal, seedLocalDevDefaults } = await import(
+        "./apostle/local-seed"
+      );
+      if (!shouldSeedLocal()) return;
+      const result = await seedLocalDevDefaults(sql);
+      console.log(
+        `[seed] local defaults · ${result.email} / ${result.password} · ${result.gatewayBaseUrl} · ${result.modelMap.default}`,
+      );
+    } catch (err) {
+      console.error("[seed] local defaults failed:", err);
+    }
+  });
 }
 
 // Server-only eager start: kick PGLite bootstrap as soon as this module loads in

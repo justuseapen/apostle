@@ -79,12 +79,16 @@ Node 22.
 
 ```bash
 npm install
+npm run dev          # http://localhost:8080 — PGLite auto-seeds Ollama + test user
+npm run seed         # re-seed against a running server (idempotent)
 # Optional: env fallback when the desk key is empty
 XAI_API_KEY=your-key npm run dev
 # or: OPENROUTER_API_KEY=… / OPENAI_API_KEY=…
 ```
 
-Open `http://localhost:8080`. Sign in → **DESK** (`/admin`) → paste base URL + API key → Save → chat.
+Local defaults (no desk setup): sign in as `test@apostle.local` / `password123`. Gateway is `http://localhost:11434/v1` with model map → `qwen3:0.6b`. Disable with `APOSTLE_SEED_LOCAL=0`.
+
+Open `http://localhost:8080`. Or configure DESK (`/admin`) yourself → paste base URL + API key → Save → chat.
 
 Private Super Intelligence skin (does not change the public Phosphor default): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
 

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Tile, TileHead } from "@/components/apostle/phosphor";
+import { oauthSignInAvailable } from "@/components/apostle/sign-in-panel";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
 import { ModeToggle } from "@/lib/theme";
 
 const GITHUB = "https://github.com/justuseapen/apostle";
@@ -100,6 +102,11 @@ function GlitchTitle({
 function enterApp() {
   if (!authEnabled) {
     window.location.assign("/");
+    return;
+  }
+  // Local: email/password on /login. Broker OAuth only when redirect_uris work.
+  if (emailAndPasswordEnabled || !oauthSignInAvailable()) {
+    window.location.assign("/login");
     return;
   }
   const first = GROK_PROVIDERS[0];

@@ -1,6 +1,8 @@
 import type { ApostlePlugin, PluginRunContext } from "./types";
+import { browserPlugin } from "./browser";
 import { calcPlugin } from "./calc";
 import { clockPlugin } from "./clock";
+import { computerPlugin } from "./computer";
 import { createMissingPlugin } from "./create-missing";
 import { fetchPagePlugin } from "./fetch-page";
 
@@ -13,6 +15,8 @@ const PLUGINS: ApostlePlugin[] = [
   fetchPagePlugin,
   calcPlugin,
   createMissingPlugin,
+  computerPlugin,
+  browserPlugin,
 ];
 
 const byId = new Map(PLUGINS.map((p) => [p.id, p]));

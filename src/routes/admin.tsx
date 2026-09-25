@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { PhButton, PhInput, PhTextarea, Tile, TileHead } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
+import { allowlistToLines } from "@/lib/apostle/browser/allowlist.ts";
 import { getDesk, listGaps, saveDesk, seedEnterpriseGaps, setGap, type GapRow } from "@/lib/apostle/server";
 import { ThemeSelect } from "@/lib/theme";
 
@@ -33,6 +34,7 @@ function Desk() {
   const [baseUrl, setBaseUrl] = useState("https://api.x.ai/v1");
   const [apiKeyDraft, setApiKeyDraft] = useState("");
   const [clearKey, setClearKey] = useState(false);
+  const [allowlistText, setAllowlistText] = useState("");
   const [note, setNote] = useState("");
   const [gaps, setGaps] = useState<GapRow[]>([]);
 
@@ -43,6 +45,7 @@ function Desk() {
     setMap(JSON.parse(desk.settings.model_map) as Record<string, string>);
     setQuota(desk.settings.enforce_quota);
     setBaseUrl(desk.settings.gateway_base_url);
+    setAllowlistText(allowlistToLines(desk.settings.browser_allowlist));
     setCatalog(desk.catalog);
     setUsage(desk.usage);
     setCount(desk.userMessages);
@@ -75,6 +78,7 @@ function Desk() {
         enforce_quota: quota,
         gateway_base_url: baseUrl,
         gateway_api_key,
+        browser_allowlist: allowlistText,
       },
     });
     await reload();
@@ -219,6 +223,24 @@ function Desk() {
               );
             })}
           </ul>
+        </Tile>
+
+        <Tile>
+          <TileHead left="BROWSER ALLOWLIST" right="HTTPS HOSTS ONLY" />
+          <div className="space-y-2 px-3 py-3">
+            <p className="text-[0.7rem] text-ph-dim leading-relaxed">
+              One host per line. Use <span className="text-ph-tool">*.example.com</span> for
+              suffix match. Localhost and private IPs are always blocked. Toggle the Browser
+              plugin above to enable tool calls.
+            </p>
+            <PhTextarea
+              value={allowlistText}
+              onChange={(e) => setAllowlistText(e.target.value)}
+              rows={6}
+              placeholder={"example.com\n*.wikipedia.org\ngithub.com"}
+              className="font-mono text-xs"
+            />
+          </div>
         </Tile>
 
         <Tile>

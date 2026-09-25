@@ -35,6 +35,8 @@ export type ToolDefinition = {
 /** Request-scoped context passed from the chat harness into plugin.run. */
 export type PluginRunContext = {
   userId: string;
+  /** Active chat thread — Computer VFS is scoped per thread when set. */
+  threadId?: string;
 };
 
 export type ApostlePlugin = {

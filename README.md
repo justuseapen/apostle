@@ -34,8 +34,8 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 
 **Now**
 
-1. Billing. Plans, a Stripe plugin, usage against the plan, margin on the desk.
-2. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin.
+1. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin (enable-only — not a public catalog entry).
+2. Honest Hero chrome for enterprise buy-in: tool cards, three-column run layout, artifacts / memory / knowledge / approval shells — without pretending the backends ship.
 
 **Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
@@ -63,10 +63,10 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 - 30-day architecture spike: browser isolation + data residency guarantees.
 - Firecracker-class sandbox proof (no host mounts, egress allowlist, per-run lifetime).
 
-**Future / deferred (enterprise P4 — direction only)**
+**Future / deferred**
 
-- Desktop computer-use VM.
-- Distribution onto a customer’s existing surfaces (e.g. TMTG product embedding).
+- Desktop computer-use VM and distribution onto a customer’s existing surfaces (enterprise P4 — direction only).
+- **Billing / Stripe / plans — out for OSS.** Apostle is open-source; do not implement Stripe or paid plans as a near-term priority. The optional free-plan message cap stays as a desk control, not a billing product. Enterprise margin can be sponsored differently if needed.
 
 Not on the list until the above is dull: WhatsApp, a workflow canvas, a new model as the product.
 

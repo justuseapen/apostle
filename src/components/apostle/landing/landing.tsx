@@ -547,16 +547,11 @@ export function Landing() {
                   <ol className="space-y-3 text-ph-mute">
                     <li>
                       <span className="text-ph-tool">1.</span>{" "}
-                      <span className="text-ph-bone">Billing.</span> Plans, a Stripe plugin, usage
-                      against the plan, margin on the desk.
-                    </li>
-                    <li>
-                      <span className="text-ph-tool">2.</span>{" "}
                       <span className="text-ph-bone">Users.</span> Not the operator. Invite link,
                       quota, their own threads.
                     </li>
                     <li>
-                      <span className="text-ph-tool">3.</span>{" "}
+                      <span className="text-ph-tool">2.</span>{" "}
                       <span className="text-ph-bone">Computer.</span> A jailed shell and files, as a
                       plugin. Default deny on the network.
                       <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
@@ -564,12 +559,12 @@ export function Landing() {
                       </p>
                     </li>
                     <li>
-                      <span className="text-ph-tool">4.</span>{" "}
+                      <span className="text-ph-tool">3.</span>{" "}
                       <span className="text-ph-bone">Knowledge.</span> Upload a corpus, retrieve it,
                       cite it.
                     </li>
                     <li>
-                      <span className="text-ph-tool">5.</span>{" "}
+                      <span className="text-ph-tool">4.</span>{" "}
                       <span className="text-ph-bone">Memory.</span> Facts about a person, separate
                       from the corpus.
                       <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
@@ -577,12 +572,12 @@ export function Landing() {
                       </p>
                     </li>
                     <li>
-                      <span className="text-ph-tool">6.</span>{" "}
+                      <span className="text-ph-tool">5.</span>{" "}
                       <span className="text-ph-bone">Browser.</span> A page inside the same cage,
                       with an allowlist.
                     </li>
                     <li>
-                      <span className="text-ph-tool">7.</span>{" "}
+                      <span className="text-ph-tool">6.</span>{" "}
                       <span className="text-ph-bone">Jev.</span> A decision model as the router:
                       which model, and whether a tool needs a person to approve it.
                       <p className="mt-1 font-marginalia text-xs text-ph-missing italic">
@@ -597,6 +592,10 @@ export function Landing() {
                   <p>
                     A theme you can swap without forking core. A catalog of plugins. Background runs
                     that finish after the tab closes. Channels besides the web.
+                  </p>
+                  <p className="mt-3 text-ph-dim">
+                    Billing / Stripe / plans —{" "}
+                    <span className="text-ph-bone">out for OSS</span>. Not a near-term build.
                   </p>
                 </div>
 

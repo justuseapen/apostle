@@ -1,5 +1,6 @@
 import { calcPlugin } from "./plugins/calc.ts";
 import { clockPlugin } from "./plugins/clock.ts";
+import { createMissingPlugin } from "./plugins/create-missing.ts";
 import { fetchPagePlugin } from "./plugins/fetch-page.ts";
 import type { ApostlePlugin } from "./plugins/types.ts";
 
@@ -23,7 +24,12 @@ export type SlashSkill = {
 );
 
 /** Keep aligned with `plugins/index.ts` PLUGINS list. */
-const INSTALLED: ApostlePlugin[] = [clockPlugin, fetchPagePlugin, calcPlugin];
+const INSTALLED: ApostlePlugin[] = [
+  clockPlugin,
+  fetchPagePlugin,
+  calcPlugin,
+  createMissingPlugin,
+];
 
 const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prompt: string }> = {
   get_time: {
@@ -40,6 +46,12 @@ const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prom
     command: "calc",
     aliases: ["calculator", "math"],
     prompt: "Calculate: ",
+  },
+  create_missing: {
+    command: "missing",
+    aliases: ["file_ask", "ask", "gap"],
+    prompt:
+      "File this Missing ask on the Desk with the create_missing tool: title \"",
   },
 };
 

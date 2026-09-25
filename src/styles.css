@@ -15,6 +15,7 @@
   --color-ph-focus: oklch(0.8 0.16 70);
   --color-ph-missing: oklch(0.78 0.16 350);
   --color-ph-tool: oklch(0.8 0.13 195);
+  --color-ph-warn: oklch(0.82 0.14 85);
   --color-ph-scan: rgb(0 0 0 / 0.22);
 
   /* Canonical aliases used across app chrome */
@@ -27,6 +28,7 @@
   --color-focus: var(--color-ph-focus);
   --color-missing: var(--color-ph-missing);
   --color-tool: var(--color-ph-tool);
+  --color-warn: var(--color-ph-warn);
 
   --font-sans: "JetBrains Mono", ui-monospace, monospace;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -50,6 +52,7 @@ html[data-mode="light"] {
   --color-ph-focus: oklch(0.5 0.2 262);
   --color-ph-missing: oklch(0.56 0.25 350);
   --color-ph-tool: oklch(0.55 0.13 215);
+  --color-ph-warn: oklch(0.55 0.14 85);
   --color-ph-scan: rgb(0 10 30 / 0.05);
 }
 

@@ -1,13 +1,19 @@
-import type { ApostlePlugin } from "./types";
+import type { ApostlePlugin, PluginRunContext } from "./types";
 import { calcPlugin } from "./calc";
 import { clockPlugin } from "./clock";
+import { createMissingPlugin } from "./create-missing";
 import { fetchPagePlugin } from "./fetch-page";
 
 /**
  * Registry. Add a plugin by importing it here — do not touch the chat harness.
  * Default plugin ids stay enabled for new operators (see settings default).
  */
-const PLUGINS: ApostlePlugin[] = [clockPlugin, fetchPagePlugin, calcPlugin];
+const PLUGINS: ApostlePlugin[] = [
+  clockPlugin,
+  fetchPagePlugin,
+  calcPlugin,
+  createMissingPlugin,
+];
 
 const byId = new Map(PLUGINS.map((p) => [p.id, p]));
 const byToolName = new Map(PLUGINS.map((p) => [p.tool.function.name, p]));
@@ -33,7 +39,11 @@ export function toolsFor(enabledIds: string[]) {
   return PLUGINS.filter((p) => enabledIds.includes(p.id)).map((p) => p.tool);
 }
 
-export async function runPluginTool(name: string, rawArgs: string): Promise<string> {
+export async function runPluginTool(
+  name: string,
+  rawArgs: string,
+  ctx?: PluginRunContext,
+): Promise<string> {
   const plugin = byToolName.get(name);
   if (!plugin) return "Unknown tool.";
   let args: Record<string, string> = {};
@@ -42,7 +52,7 @@ export async function runPluginTool(name: string, rawArgs: string): Promise<stri
   } catch {
     args = {};
   }
-  return plugin.run(args);
+  return plugin.run(args, ctx);
 }
 
 /** Short list for the missing-capability classifier. */
@@ -50,4 +60,4 @@ export function installedCapabilityBlurb(): string {
   return PLUGINS.map((p) => `${p.name} (${p.tool.function.name})`).join(", ");
 }
 
-export { type ApostlePlugin } from "./types";
+export { type ApostlePlugin, type PluginRunContext } from "./types";

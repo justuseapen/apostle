@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { PhButton, PhInput, PhTextarea, Tile, TileHead } from "@/components/apostle/phosphor";
 import { Shell } from "@/components/apostle/shell";
-import { getDesk, listGaps, saveDesk, setGap, type GapRow } from "@/lib/apostle/server";
+import { getDesk, listGaps, saveDesk, seedEnterpriseGaps, setGap, type GapRow } from "@/lib/apostle/server";
 import { ThemeSelect } from "@/lib/theme";
 
 export const Route = createFileRoute("/admin")({ component: Desk });
@@ -47,7 +47,13 @@ function Desk() {
     setUsage(desk.usage);
     setCount(desk.userMessages);
     setGateway(desk.gateway);
-    setGaps(await listGaps());
+    let nextGaps = await listGaps();
+    // Pitch desk: never leave Missing empty — soft-seed buy-in matrix once.
+    if (nextGaps.length === 0) {
+      await seedEnterpriseGaps().catch(() => null);
+      nextGaps = await listGaps();
+    }
+    setGaps(nextGaps);
     setApiKeyDraft("");
     setClearKey(false);
   }
@@ -251,6 +257,29 @@ function Desk() {
 
         <Tile missing>
           <TileHead left="MISSING — ASKS YOU HAVE NOT BUILT" right="SORTED BY COUNT" />
+          <div className="flex flex-wrap gap-2 border-b-2 border-ph-border px-3 py-3">
+            <PhButton
+              tone="missing"
+              onClick={() =>
+                void seedEnterpriseGaps()
+                  .then((r) => {
+                    setNote(
+                      r.ok
+                        ? `Seeded buy-in gaps · filed ${r.filed}, skipped ${r.skipped}.`
+                        : "Seed failed.",
+                    );
+                    return listGaps().then(setGaps);
+                  })
+                  .catch(() => setNote("Seed failed."))
+              }
+            >
+              Seed enterprise gaps
+            </PhButton>
+            <p className="w-full text-[0.7rem] text-ph-dim leading-relaxed">
+              Chat can also file rows via the <span className="text-ph-tool">create_missing</span>{" "}
+              tool (/missing). Seed fills the TMTG buy-in matrix so the pitch desk is never empty.
+            </p>
+          </div>
           <ul className="divide-y-2 divide-ph-border">
             {gaps.length === 0 && (
               <li className="px-3 py-4 text-ph-dim">None yet.</li>

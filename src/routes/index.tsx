@@ -3,8 +3,10 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Landing } from "@/components/apostle/landing/landing";
 import { Markdown } from "@/components/apostle/markdown";
 import { PhButton, PhInput } from "@/components/apostle/phosphor";
+import { RunContextPanel } from "@/components/apostle/run-context";
 import { Shell } from "@/components/apostle/shell";
 import { SlashMenu } from "@/components/apostle/slash-menu";
+import { ApprovalCard, ToolCard } from "@/components/apostle/tool-card";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { listMessages, listThreads, sendMessage, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
@@ -17,7 +19,7 @@ import {
 
 export const Route = createFileRoute("/")({ component: Home });
 
-type Trace = { name: string; result: string };
+type Trace = { name: string; args?: string; result: string };
 type Meta = { label?: string; reason?: string; model?: string; tools?: Trace[] };
 
 function readMeta(raw: string | null): Meta {
@@ -50,6 +52,7 @@ function Chat() {
   const [logged, setLogged] = useState("");
   const [openList, setOpenList] = useState(false);
   const [slashIndex, setSlashIndex] = useState(0);
+  const [showApprovalDemo, setShowApprovalDemo] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const allSkills = useMemo(() => listSlashSkills(), []);
 
@@ -59,6 +62,14 @@ function Chat() {
     () => (query === null ? [] : filterSlashSkills(query, allSkills)),
     [query, allSkills],
   );
+
+  const toolCount = useMemo(() => {
+    let n = 0;
+    for (const m of messages) {
+      n += readMeta(m.meta).tools?.length ?? 0;
+    }
+    return n;
+  }, [messages]);
 
   useEffect(() => {
     setSlashIndex(0);
@@ -89,11 +100,14 @@ function Chat() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [messages, busy]);
 
-  // Screenshot / smoke helper: window.dispatchEvent(new CustomEvent("apostle:demo-message", { detail: { content, tools? } }))
+  // Screenshot / smoke helper: window.dispatchEvent(new CustomEvent("apostle:demo-message", { detail: { content, tools?, approval? } }))
   useEffect(() => {
     const onDemo = (e: Event) => {
-      const detail = (e as CustomEvent<{ content?: string; tools?: Trace[] }>).detail;
+      const detail = (
+        e as CustomEvent<{ content?: string; tools?: Trace[]; approval?: boolean }>
+      ).detail;
       if (!detail?.content) return;
+      if (detail.approval) setShowApprovalDemo(true);
       setMessages((m) => [
         ...m,
         {
@@ -125,6 +139,7 @@ function Chat() {
     setOpenList(false);
     setError("");
     setLogged("");
+    setShowApprovalDemo(false);
   }
 
   function applySkill(skill: SlashSkill) {
@@ -201,9 +216,10 @@ function Chat() {
     }
   }
 
+  // Three-column Hero shell: threads | chat | context (xl+)
   return (
     <Shell>
-      <div className="grid h-[calc(100dvh-3.5rem)] lg:grid-cols-[16rem_1fr]">
+      <div className="grid h-[calc(100dvh-3.5rem)] lg:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_18rem]">
         <aside
           className={`${openList ? "flex" : "hidden"} absolute inset-x-0 top-14 z-10 max-h-[70dvh] flex-col border-b-2 border-ph-border bg-ph-void lg:static lg:flex lg:max-h-none lg:border-b-0 lg:border-r-2`}
         >
@@ -253,7 +269,8 @@ function Chat() {
                   </p>
                   <p className="mt-3 max-w-md font-mono text-sm leading-relaxed text-ph-dim">
                     Apostle is the install. The desk is where you change the voice and turn plugins
-                    on. Type <span className="text-ph-tool">/</span> for skills, or try “what time
+                    on. Type <span className="text-ph-tool">/</span> for skills — try{" "}
+                    <span className="text-ph-tool">/missing</span> to file a Desk ask, or “what time
                     is it in Aberdeen?”
                   </p>
                 </div>
@@ -269,15 +286,9 @@ function Chat() {
                       </p>
                     )}
                     {meta.tools?.map((tool, i) => (
-                      <pre
-                        key={`${m.id}-t-${i}`}
-                        className="mb-2 overflow-x-auto border-2 border-ph-tool bg-ph-tile p-3 text-xs whitespace-pre-wrap text-ph-tool"
-                      >
-                        {tool.name}
-                        {"\n"}
-                        {tool.result.slice(0, 500)}
-                      </pre>
+                      <ToolCard key={`${m.id}-t-${i}`} tool={tool} />
                     ))}
+                    {!mine && showApprovalDemo && m.id.startsWith("demo-") && <ApprovalCard />}
                     <div
                       className={
                         mine
@@ -340,13 +351,20 @@ function Chat() {
                   aria-autocomplete="list"
                   aria-expanded={slashOpen}
                 />
-                <PhButton tone="focus" type="submit" disabled={busy || !draft.trim() || slashOpen} className="h-11 px-5">
+                <PhButton
+                  tone="focus"
+                  type="submit"
+                  disabled={busy || !draft.trim() || slashOpen}
+                  className="h-11 px-5"
+                >
                   Send
                 </PhButton>
               </div>
             </div>
           </form>
         </section>
+
+        <RunContextPanel toolCount={toolCount} showApprovalDemo={showApprovalDemo} />
       </div>
     </Shell>
   );

@@ -6,6 +6,9 @@
  *
  * Default is deny: declare network / secrets / approvals on the plugin.
  * Core refuses anything not declared.
+ *
+ * Optional PluginRunContext carries the operator session when a tool needs
+ * durable per-user writes (e.g. create_missing → gaps table). Most tools ignore it.
  */
 export type PluginNeeds = {
   /** Outbound network hosts the tool may call. Empty = none. */
@@ -29,11 +32,16 @@ export type ToolDefinition = {
   };
 };
 
+/** Request-scoped context passed from the chat harness into plugin.run. */
+export type PluginRunContext = {
+  userId: string;
+};
+
 export type ApostlePlugin = {
   id: string;
   name: string;
   blurb: string;
   needs: PluginNeeds;
   tool: ToolDefinition;
-  run: (args: Record<string, string>) => Promise<string>;
+  run: (args: Record<string, string>, ctx?: PluginRunContext) => Promise<string>;
 };

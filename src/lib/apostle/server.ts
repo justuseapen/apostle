@@ -16,6 +16,7 @@ import {
   resolveGateway as resolveGatewayConfig,
   type GatewayResolved,
 } from "@/lib/apostle/gateway";
+import { seedEnterpriseGaps as seedGapsRows, upsertGap } from "@/lib/apostle/gaps";
 
 export type ThreadRow = { id: string; title: string; created_at: string };
 export type MessageRow = {
@@ -43,7 +44,7 @@ export type UsageRow = {
 };
 
 const DEFAULT_PROMPT =
-  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it.";
+  "You are Apostle, a chat assistant the operator installed and themed. Be concise, concrete, and useful. When a tool is available and it would make the answer true, use it. When the user asks to file, log, or add a Missing feature/ask to the Desk roadmap, call create_missing with a short title (and optional detail).";
 
 type Label = "cheap" | "default" | "strong" | "vision";
 
@@ -107,6 +108,19 @@ function resolveGateway(settings: SettingsRow): GatewayResolved {
   });
 }
 
+/** Soft-enable create_missing for existing operators so Qwen can file Desk asks. */
+async function ensureCreateMissingEnabled(userId: string, pluginsRaw: string) {
+  const list = parseList(pluginsRaw);
+  if (list.includes("create_missing") || !isKnownPluginId("create_missing")) {
+    return pluginsRaw;
+  }
+  list.push("create_missing");
+  const next = JSON.stringify(list);
+  const sql = await getSql();
+  await sql`update settings set plugins = ${next} where user_id = ${userId}`;
+  return next;
+}
+
 async function ensureSettings(userId: string) {
   const sql = await getSql();
   await sql`
@@ -118,7 +132,10 @@ async function ensureSettings(userId: string) {
            gateway_base_url, gateway_api_key
     from settings where user_id = ${userId}
   `;
-  return rows[0];
+  const row = rows[0];
+  if (!row) return row;
+  row.plugins = await ensureCreateMissingEnabled(userId, row.plugins);
+  return row;
 }
 
 async function chatCompletions(
@@ -371,7 +388,9 @@ export const sendMessage = createServerFn({ method: "POST" })
         tool_calls: calls,
       });
       for (const call of calls) {
-        const result = await runPluginTool(call.function.name, call.function.arguments);
+        const result = await runPluginTool(call.function.name, call.function.arguments, {
+          userId: context.userId,
+        });
         traces.push({ name: call.function.name, args: call.function.arguments, result });
         messages.push({
           role: "tool",
@@ -420,15 +439,6 @@ export const sendMessage = createServerFn({ method: "POST" })
     };
   });
 
-function slugify(title: string) {
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48);
-  return slug || "ask";
-}
-
 async function noteGap(
   gateway: GatewayResolved,
   model: string,
@@ -437,6 +447,8 @@ async function noteGap(
   answer: string,
   toolsUsed: string[],
 ): Promise<string | null> {
+  // Explicit create_missing already filed the ask — skip classifier noise.
+  if (toolsUsed.includes("create_missing")) return null;
   try {
     const res = await chatCompletions(gateway, {
       model,
@@ -445,7 +457,7 @@ async function noteGap(
       messages: [
         {
           role: "system",
-          content: `Installed tools: ${installedCapabilityBlurb()}. Reply JSON only: {"gap":null} or {"gap":"short capability name"}. Set gap only when the user wanted data or an action those tools cannot do. Greetings, opinions, and ordinary questions are null.`,
+          content: `Installed tools: ${installedCapabilityBlurb()}. Reply JSON only: {"gap":null} or {"gap":"short capability name"}. Set gap only when the user wanted data or an action those tools cannot do. Greetings, opinions, and ordinary questions are null. If create_missing was (or should be) used to file the ask, return null.`,
         },
         {
           role: "user",
@@ -462,25 +474,8 @@ async function noteGap(
     if (typeof parsed.gap !== "string") return null;
     const title = parsed.gap.trim().slice(0, 80);
     if (title.length < 2 || title.toLowerCase() === "null") return null;
-    const slug = slugify(title);
-    const sql = await getSql();
-    const existing = await sql<{ id: string; status: string }>`
-      select id, status from gaps where user_id = ${userId} and slug = ${slug}
-    `;
-    if (existing[0]?.status === "dismissed") return null;
-    if (existing[0]) {
-      await sql`
-        update gaps
-        set hits = hits + 1, example = ${ask.slice(0, 280)}, title = ${title}, updated_at = now()
-        where id = ${existing[0].id} and user_id = ${userId}
-      `;
-    } else {
-      await sql`
-        insert into gaps (id, user_id, slug, title, example)
-        values (${crypto.randomUUID()}, ${userId}, ${slug}, ${title}, ${ask.slice(0, 280)})
-      `;
-    }
-    return title;
+    const row = await upsertGap({ userId, title, example: ask.slice(0, 280) });
+    return row?.title ?? null;
   } catch {
     return null;
   }
@@ -523,4 +518,32 @@ export const setGap = createServerFn({ method: "POST" })
       where id = ${data.id} and user_id = ${context.userId}
     `;
     return { ok: true as const };
+  });
+
+/** One-shot seed of enterprise buy-in Missing rows (idempotent by slug). */
+export const seedEnterpriseGaps = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const result = await seedGapsRows(context.userId);
+    return { ok: true as const, ...result };
+  });
+
+/** Explicit file from Desk UI (same upsert path as create_missing tool). */
+export const fileGapAsk = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { title: string; detail?: string; note?: string }) => ({
+    title: (input.title ?? "").trim().slice(0, 80),
+    detail: (input.detail ?? "").trim().slice(0, 280),
+    note: (input.note ?? "").trim().slice(0, 500),
+  }))
+  .handler(async ({ context, data }) => {
+    if (data.title.length < 2) return { ok: false as const, error: "Title too short." };
+    const row = await upsertGap({
+      userId: context.userId,
+      title: data.title,
+      example: data.detail || data.title,
+      note: data.note,
+    });
+    if (!row) return { ok: false as const, error: "Ask was dismissed or empty." };
+    return { ok: true as const, title: row.title, created: row.created };
   });

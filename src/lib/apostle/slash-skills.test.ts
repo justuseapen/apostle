@@ -8,6 +8,7 @@ describe("slash skills", () => {
     assert.ok(ids.includes("get_time"));
     assert.ok(ids.includes("fetch_page"));
     assert.ok(ids.includes("calc"));
+    assert.ok(ids.includes("create_missing"));
     assert.ok(ids.includes("desk"));
     assert.ok(ids.includes("help"));
   });
@@ -29,5 +30,9 @@ describe("slash skills", () => {
     const ti = filterSlashSkills("ti");
     assert.equal(ti.length, 1);
     assert.equal(ti[0]?.id, "get_time");
+    const missing = filterSlashSkills("missing");
+    assert.ok(missing.some((s) => s.id === "create_missing"));
+    const fileAsk = filterSlashSkills("file_ask");
+    assert.ok(fileAsk.some((s) => s.id === "create_missing"));
   });
 });

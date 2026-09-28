@@ -143,6 +143,18 @@ async function ensureSettings(userId: string) {
   if (!row) return row;
   // Soft-enable create_missing so Qwen can file Desk asks.
   row.plugins = await ensurePluginEnabled(userId, row.plugins, "create_missing");
+  // Soft-enable launch utility plugins for existing operators (Desk can still disable).
+  for (const id of [
+    "hash",
+    "uuid",
+    "base64",
+    "json_format",
+    "regex",
+    "link_unfurl",
+    "weather",
+  ] as const) {
+    row.plugins = await ensurePluginEnabled(userId, row.plugins, id);
+  }
   // Soft-enable browser Computer spike for existing operators.
   row.plugins = await ensurePluginEnabled(userId, row.plugins, "computer");
   // Soft-enable allowlisted Browser for local ops / seeded desks.

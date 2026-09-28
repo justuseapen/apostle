@@ -5,15 +5,25 @@ import { filterSlashSkills, listSlashSkills, slashQuery } from "./slash-skills.t
 describe("slash skills", () => {
   it("lists installed plugins plus desk and help", () => {
     const ids = listSlashSkills().map((s) => s.id);
-    assert.ok(ids.includes("get_time"));
-    assert.ok(ids.includes("fetch_page"));
-    assert.ok(ids.includes("calc"));
-    assert.ok(ids.includes("create_missing"));
-    assert.ok(ids.includes("computer"));
-    assert.ok(ids.includes("browser"));
-    assert.ok(ids.includes("hash"));
-    assert.ok(ids.includes("desk"));
-    assert.ok(ids.includes("help"));
+    for (const id of [
+      "get_time",
+      "calc",
+      "hash",
+      "uuid",
+      "base64",
+      "json_format",
+      "regex",
+      "fetch_page",
+      "link_unfurl",
+      "weather",
+      "create_missing",
+      "computer",
+      "browser",
+      "desk",
+      "help",
+    ]) {
+      assert.ok(ids.includes(id), `missing slash skill ${id}`);
+    }
   });
 
   it("detects active slash query", () => {
@@ -43,5 +53,9 @@ describe("slash skills", () => {
     assert.ok(browse.some((s) => s.id === "browser"));
     const hash = filterSlashSkills("sha256");
     assert.ok(hash.some((s) => s.id === "hash"));
+    assert.ok(filterSlashSkills("uuid").some((s) => s.id === "uuid"));
+    assert.ok(filterSlashSkills("unfurl").some((s) => s.id === "link_unfurl"));
+    assert.ok(filterSlashSkills("weather").some((s) => s.id === "weather"));
+    assert.ok(filterSlashSkills("json").some((s) => s.id === "json_format"));
   });
 });

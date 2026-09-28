@@ -106,7 +106,7 @@ export const ENTERPRISE_GAP_SEEDS: {
   {
     title: "Sandbox workspace computer",
     example: "Isolated shell + filesystem (default deny network)",
-    note: "P1 · browser Computer spike in flight; CLI/desktop deferred; Firecracker = enterprise Spike",
+    note: "Partial — browser Computer VFS + constrained shell shipped; CLI/desktop deferred; Firecracker = enterprise Spike",
   },
   {
     title: "Better VM",
@@ -117,6 +117,11 @@ export const ENTERPRISE_GAP_SEEDS: {
     title: "Allowlisted browser trail",
     example: "Contained Chromium + domain allowlist + screenshots",
     note: "Partial — Browser plugin + Desk session admin + click/type polish; Firecracker residency still Spike",
+  },
+  {
+    title: "Memory / RAG plugins",
+    example: "Revocable memory drawer or corpus search with citations",
+    note: "Intentionally absent from launch catalog — use Computer VFS for scratch notes; no fake RAG",
   },
   {
     title: "Search through threads",

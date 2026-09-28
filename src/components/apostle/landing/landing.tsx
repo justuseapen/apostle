@@ -53,6 +53,11 @@ const PLUGINS: {
     meta: "network: public https · secrets: none · approvals: none",
   },
   {
+    on: true,
+    name: "weather",
+    meta: "network: open-meteo · no API key",
+  },
+  {
     on: false,
     name: "computer",
     next: true,
@@ -63,7 +68,7 @@ const PLUGINS: {
 const SHIPPED = [
   "threads, streaming-style replies, per-user history",
   "sign-in — threads and desk settings belong to the operator",
-  "plugins: clock, fetch of a public https page",
+  "launch plugins: clock, calc, hash, uuid, base64, json, regex, fetch, unfurl, weather, missing, computer, browser",
   "model map + token log",
   "optional free-plan message cap (40) — desk control, not a billing product",
 ] as const;

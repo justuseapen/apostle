@@ -27,7 +27,7 @@ The model sits behind one OpenAI-compatible gateway. The same slot works for Gro
 - Sign-in, so threads and desk settings belong to the operator.
 - A desk-owned gateway: base URL + API key (OpenAI-compatible). Falls back to `XAI_API_KEY`, then `OPENROUTER_API_KEY`, then `OPENAI_API_KEY`.
 - A frozen plugin contract under `src/lib/apostle/plugins/` — register a plugin there; do not edit the harness.
-- Plugins: clock, public https page fetch, calculator, file-ask (`create_missing`), **Hash** (example third-party-style digest plugin), **Computer** (browser-sandbox VFS + constrained shell — **not** host FS; **spike**, not done), and **Browser** (allowlisted Playwright + screenshot trail — **partial**, not done).
+- Plugins (launch catalog, ~13): **Clock** (timezone format/convert), **Calculator**, **Hash**, **UUID**, **Base64**, **JSON** (pretty/minify/validate), **Regex**, **Page fetch**, **Link unfurl**, **Weather** (Open-Meteo, no API key), **File ask** (`create_missing`), **Computer** (browser-sandbox VFS + constrained shell — **not** host FS; **partial**), **Browser** (allowlisted Playwright + screenshot trail — **partial**). See [`docs/plugin-catalog.md`](./docs/plugin-catalog.md).
 - A model map and a token log.
 - An optional free-plan message cap (40) as a **desk control**, not a billing product.
 - **Missing.** If a person asks for a capability the installed tools cannot do, the ask is logged with a count. Start it, dismiss it, or mark it done.
@@ -134,6 +134,7 @@ Sign-in is Google or X through the hosted broker. If that redirect is refused on
 | Doc | What |
 |---|---|
 | [`docs/plugins.md`](./docs/plugins.md) | Add a third-party-style plugin in an afternoon |
+| [`docs/plugin-catalog.md`](./docs/plugin-catalog.md) | Launch plugin list (one-liners + honesty) |
 | [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink); SI stays private |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |

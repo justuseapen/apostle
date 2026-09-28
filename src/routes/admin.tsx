@@ -370,9 +370,10 @@ function Desk() {
                 <TileHead left="PLUGINS" right="DEFAULT: DENY" />
                 <div className="space-y-2 px-3 pt-3">
                   <p className="text-[0.7rem] text-ph-dim leading-relaxed">
-                    Plugins declare network / secrets / approvals. Hash is the third-party-style
-                    example — see <span className="text-ph-tool">docs/plugins.md</span>. Computer is
-                    browser VFS — <span className="text-ph-bone">not host FS</span>. Browser is
+                    Launch catalog (~13): utilities, fetch/unfurl/weather, Missing, Computer, Browser.
+                    See <span className="text-ph-tool">docs/plugin-catalog.md</span>. Hash remains the
+                    third-party-style example (<span className="text-ph-tool">docs/plugins.md</span>).
+                    Computer is browser VFS — <span className="text-ph-bone">not host FS</span>. Browser is
                     allowlisted Playwright — <span className="text-ph-bone">not Firecracker</span>.
                   </p>
                 </div>

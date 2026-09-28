@@ -1,4 +1,5 @@
 import type { ApostlePlugin, PluginRunContext } from "./types";
+import { base64Plugin } from "./base64";
 import { browserPlugin } from "./browser";
 import { calcPlugin } from "./calc";
 import { clockPlugin } from "./clock";
@@ -6,18 +7,29 @@ import { computerPlugin } from "./computer";
 import { createMissingPlugin } from "./create-missing";
 import { fetchPagePlugin } from "./fetch-page";
 import { hashPlugin } from "./hash";
+import { jsonFormatPlugin } from "./json-format";
+import { linkUnfurlPlugin } from "./link-unfurl";
+import { regexPlugin } from "./regex";
+import { uuidPlugin } from "./uuid";
+import { weatherPlugin } from "./weather";
 
 /**
  * Registry. Add a plugin by importing it here — do not touch the chat harness.
- * Default plugin ids stay enabled for new operators (see settings default).
- * Third-party-style example: hash (see docs/plugins.md).
+ * Default plugin ids stay enabled for new operators (see settings default + local seed).
+ * Author path: docs/plugins.md · catalog: docs/plugin-catalog.md
  */
 const PLUGINS: ApostlePlugin[] = [
   clockPlugin,
-  fetchPagePlugin,
   calcPlugin,
-  createMissingPlugin,
   hashPlugin,
+  uuidPlugin,
+  base64Plugin,
+  jsonFormatPlugin,
+  regexPlugin,
+  fetchPagePlugin,
+  linkUnfurlPlugin,
+  weatherPlugin,
+  createMissingPlugin,
   computerPlugin,
   browserPlugin,
 ];

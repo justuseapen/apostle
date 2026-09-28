@@ -1,6 +1,6 @@
 # Apostle
 
-Open-source harness to run your own AI assistant.
+Open-source harness to install your own AI assistant.
 
 **License:** [MIT](./LICENSE) · **Contributing:** [CONTRIBUTING.md](./CONTRIBUTING.md)
 
@@ -17,7 +17,7 @@ Two URLs, one product.
 
 Core stays small. It chats with zero plugins. A theme never owns the harness. A plugin declares what it needs, and core refuses the rest.
 
-**Not LibreChat / Open WebUI** — those are chat UIs / ChatGPT-shaped frontends. **Not Dify** — that is an app/workflow builder. Apostle is operator infrastructure: desk-owned gateway, frozen plugins, themes that never register tools, and Missing as the roadmap.
+**Not another Open WebUI / LibreChat** — those already won “ChatGPT alternative” UI (one chat, many models, kill the tab tax). **Not OpenCode / Claude Code** — that’s a terminal coding agent. **Not Dify** — that’s an app/workflow builder. Apostle is the operator harness to install *your* chat product or community assistant: desk-owned gateway, frozen plugins, themes that never register tools, and Missing as the roadmap.
 
 The model sits behind one OpenAI-compatible gateway. The same slot works for Grok, OpenRouter, Ollama, or any other compatible endpoint. A router picks a label before each turn (`cheap`, `default`, `strong`, `vision`) and the desk maps those labels to model ids. Later that choice can be a typed decision model (Jev) instead of the local heuristic.
 

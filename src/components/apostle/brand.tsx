@@ -98,7 +98,7 @@ export function BrandTagline({ className = "" }: { className?: string }) {
   }
   return (
     <p className={`font-marginalia text-lg text-ph-bone italic ${className}`}>
-      Install a chat product. Own the desk.
+      Install your own AI assistant. Own the desk.
     </p>
   );
 }

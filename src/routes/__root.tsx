@@ -15,7 +15,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Open-source harness to run your own AI assistant. Desk-owned gateway, themes, plugins, and Missing — not another ChatGPT clone.",
+          "Open-source harness to install your own AI assistant. Desk, themes, plugins, Missing — not another ChatGPT UI or Claude Code CLI.",
       },
       { name: "theme-color", content: "#0b0c10" },
       // Optional deploy default for a private customer skin (e.g. content="si").

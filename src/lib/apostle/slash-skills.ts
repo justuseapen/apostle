@@ -1,3 +1,4 @@
+import { base64Plugin } from "./plugins/base64.ts";
 import { browserPlugin } from "./plugins/browser.ts";
 import { calcPlugin } from "./plugins/calc.ts";
 import { clockPlugin } from "./plugins/clock.ts";
@@ -5,6 +6,11 @@ import { computerPlugin } from "./plugins/computer.ts";
 import { createMissingPlugin } from "./plugins/create-missing.ts";
 import { fetchPagePlugin } from "./plugins/fetch-page.ts";
 import { hashPlugin } from "./plugins/hash.ts";
+import { jsonFormatPlugin } from "./plugins/json-format.ts";
+import { linkUnfurlPlugin } from "./plugins/link-unfurl.ts";
+import { regexPlugin } from "./plugins/regex.ts";
+import { uuidPlugin } from "./plugins/uuid.ts";
+import { weatherPlugin } from "./plugins/weather.ts";
 import type { ApostlePlugin } from "./plugins/types.ts";
 
 /**
@@ -29,10 +35,16 @@ export type SlashSkill = {
 /** Keep aligned with `plugins/index.ts` PLUGINS list. */
 const INSTALLED: ApostlePlugin[] = [
   clockPlugin,
-  fetchPagePlugin,
   calcPlugin,
-  createMissingPlugin,
   hashPlugin,
+  uuidPlugin,
+  base64Plugin,
+  jsonFormatPlugin,
+  regexPlugin,
+  fetchPagePlugin,
+  linkUnfurlPlugin,
+  weatherPlugin,
+  createMissingPlugin,
   computerPlugin,
   browserPlugin,
 ];
@@ -40,33 +52,63 @@ const INSTALLED: ApostlePlugin[] = [
 const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prompt: string }> = {
   get_time: {
     command: "time",
-    aliases: ["get_time", "clock"],
-    prompt: "What time is it right now? Use the get_time tool.",
-  },
-  fetch_page: {
-    command: "fetch",
-    aliases: ["fetch_page", "page"],
-    prompt: "Fetch and summarize this page: https://",
+    aliases: ["get_time", "clock", "tz", "timezone"],
+    prompt:
+      "What time is it right now? Use the get_time tool (optionally also_timezone for a second zone).",
   },
   calc: {
     command: "calc",
     aliases: ["calculator", "math"],
     prompt: "Calculate: ",
   },
-  create_missing: {
-    command: "missing",
-    aliases: ["file_ask", "ask", "gap"],
-    prompt:
-      "File this Missing ask on the Desk with the create_missing tool: title \"",
-  },
   hash: {
     command: "hash",
     aliases: ["sha256", "checksum", "digest"],
     prompt: "Hash this text with the hash tool (sha256): ",
   },
+  uuid: {
+    command: "uuid",
+    aliases: ["guid", "id"],
+    prompt: "Generate a UUIDv4 with the uuid tool.",
+  },
+  base64: {
+    command: "base64",
+    aliases: ["b64"],
+    prompt: "Base64-encode this with the base64 tool: ",
+  },
+  json_format: {
+    command: "json",
+    aliases: ["json_format", "pretty", "minify"],
+    prompt: "Pretty-print this JSON with the json_format tool: ",
+  },
+  regex: {
+    command: "regex",
+    aliases: ["re", "match"],
+    prompt: "Test this regex with the regex tool. Pattern: ",
+  },
+  fetch_page: {
+    command: "fetch",
+    aliases: ["fetch_page", "page", "summarize"],
+    prompt: "Fetch and summarize this page: https://",
+  },
+  link_unfurl: {
+    command: "unfurl",
+    aliases: ["link_unfurl", "preview", "og"],
+    prompt: "Unfurl this link with the link_unfurl tool: https://",
+  },
+  weather: {
+    command: "weather",
+    aliases: ["wx", "forecast", "temp"],
+    prompt: "What is the weather in ",
+  },
+  create_missing: {
+    command: "missing",
+    aliases: ["file_ask", "ask", "gap"],
+    prompt: 'File this Missing ask on the Desk with the create_missing tool: title "',
+  },
   computer: {
     command: "computer",
-    aliases: ["shell", "fs", "workspace", "vfs"],
+    aliases: ["shell", "fs", "workspace", "vfs", "notes"],
     prompt:
       "Use the computer tool (browser sandbox workspace). First call action info if unsure of limits, then list/read/write/run as needed: ",
   },

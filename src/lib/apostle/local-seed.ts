@@ -27,10 +27,18 @@ export const LOCAL_SEED_MODEL_MAP = {
   vision: LOCAL_SEED_MODEL,
 } as const;
 
+/** Launch catalog soft-enabled for local demo (Desk can still toggle). */
 export const LOCAL_SEED_PLUGINS = [
   "get_time",
-  "fetch_page",
   "calc",
+  "hash",
+  "uuid",
+  "base64",
+  "json_format",
+  "regex",
+  "fetch_page",
+  "link_unfurl",
+  "weather",
   "create_missing",
   "computer",
   "browser",

@@ -3,15 +3,18 @@
 **Audience:** someone who can clone Apostle and wants a third-party-style tool without forking the chat harness.  
 **Law:** themes never register tools. Plugins declare `needs`; core refuses the rest. Default is deny.
 
+**Launch list:** one-liners + honesty → [`plugin-catalog.md`](./plugin-catalog.md) (Clock, Calc, Hash, UUID, Base64, JSON, Regex, Fetch, Unfurl, Weather, Missing, Computer, Browser).
+
 ## Ritual (checklist)
 
-1. **Copy the scaffold** — start from `src/lib/apostle/plugins/hash.ts` (Hash is the shipping example beyond clock / fetch / calc).
+1. **Copy the scaffold** — start from `src/lib/apostle/plugins/hash.ts` (Hash is the shipping example beyond the built-in utilities).
 2. **Implement `ApostlePlugin`** — `id`, `name`, `blurb`, `needs`, `tool` (OpenAI function schema), `run(args, ctx?)`.
 3. **Register** — import and append in `src/lib/apostle/plugins/index.ts` (`PLUGINS` array). Do **not** edit `server.ts` for tool wiring.
 4. **Slash skill** — add the plugin to `INSTALLED` + `PLUGIN_PROMPTS` in `src/lib/apostle/slash-skills.ts` (keep lists aligned with the registry).
-5. **Desk enable** — toggle the plugin under `/admin` → Plugins → Save. New operators get defaults from settings; Hash is catalogued but not auto-enabled until you turn it on (or soft-enable in local seed if you choose).
+5. **Desk enable** — toggle the plugin under `/admin` → Plugins → Save. New operators get launch defaults from settings; local seed soft-enables the full catalog for `test@apostle.local`.
 6. **Test** — add `*.test.ts` next to the plugin; include it in `package.json` `"test"` / `"test:ci"` scripts if it is Apostle-critical.
-7. **Try** — `npm run dev` → sign in → Desk → enable → chat `/hash` (or your command) → confirm tool card.
+7. **Catalog** — add a row to [`plugin-catalog.md`](./plugin-catalog.md).
+8. **Try** — `npm run dev` → sign in → Desk → enable → chat `/hash` (or your command) → confirm tool card.
 
 ## Contract (frozen)
 
@@ -38,18 +41,22 @@ Hash digests text with SHA-256 / SHA-1 / MD5. No network. No harness edits.
 ```bash
 npm install && npm run dev
 # sign in as test@apostle.local / password123
-# Desk → Plugins → Hash [on] → Save
+# Desk → Plugins → Hash [on] → Save (already on for local seed)
 # Chat: /hash then finish the prompt, or ask “SHA-256 of hello with the hash tool”
 ```
+
+Other slash demos from the launch set: `/uuid`, `/json`, `/unfurl`, `/weather Austin`.
 
 ## What not to do
 
 - Do not hard-code tools inside `server.ts` or the chat route.
 - Do not put tool logic in a theme (`data-theme` / CSS tokens only — see [`themes.md`](./themes.md)).
 - Do not claim host shell / arbitrary web / Firecracker unless the plugin’s honesty copy matches.
+- Do not ship memory/RAG stubs that pretend to retrieve.
 
 ## Related
 
+- Launch catalog: [`plugin-catalog.md`](./plugin-catalog.md)
 - Types: `src/lib/apostle/plugins/types.ts`
 - Registry: `src/lib/apostle/plugins/index.ts`
 - CONTRIBUTING: [`../CONTRIBUTING.md`](../CONTRIBUTING.md)

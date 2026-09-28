@@ -1,6 +1,6 @@
 # Contributing
 
-Apostle is WordPress for a chat assistant: **themes** change the look; **plugins** change what it can do. Core stays small.
+Apostle is an open-source harness to run your own AI assistant: **themes** change the look; **plugins** change what it can do. Core stays small.
 
 ## How to help
 

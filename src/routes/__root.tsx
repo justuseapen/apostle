@@ -12,7 +12,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: APP_NAME },
-      { name: "description", content: "WordPress for a chat assistant. Install it, theme it, turn plugins on." },
+      {
+        name: "description",
+        content:
+          "Open-source harness to run your own AI assistant. Desk-owned gateway, themes, plugins, and Missing — not another ChatGPT clone.",
+      },
       { name: "theme-color", content: "#0b0c10" },
       // Optional deploy default for a private customer skin (e.g. content="si").
       { name: "apostle-default-theme", content: "phosphor" },

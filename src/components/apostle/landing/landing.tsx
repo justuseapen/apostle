@@ -65,7 +65,7 @@ const SHIPPED = [
   "sign-in — threads and desk settings belong to the operator",
   "plugins: clock, fetch of a public https page",
   "model map + token log",
-  "optional free-plan cap — 40 messages, so a paid plan has something to lift",
+  "optional free-plan message cap (40) — desk control, not a billing product",
 ] as const;
 
 const TREE = [
@@ -238,12 +238,13 @@ export function Landing() {
                 <GlitchTitle text="APOSTLE" />
               </h1>
               <p className="font-marginalia text-2xl text-ph-bone italic sm:text-3xl">
-                WordPress for a chat assistant.
+                Open-source harness to install your own AI assistant.
               </p>
               <p className="max-w-xl font-mono text-sm leading-relaxed text-ph-mute">
-                Install it, point at Ollama (or paste a model key), and you have a product people can
-                talk to. The look is a theme. What it can do is a plugin. When someone asks for
-                something you have not built yet, the desk records it so you can add it.
+                Tired of renting three AI tabs? Install it, point at Ollama (or paste a model key),
+                and you have a product people can talk to. Themes change the look. Plugins change what
+                it can do. Missing records what you have not built yet — harness and desk, not another
+                ChatGPT UI or Claude Code CLI.
               </p>
 
               <div className="relative border-2 border-ph-border bg-ph-void px-4 py-3 font-mono text-sm">
@@ -326,6 +327,31 @@ export function Landing() {
               </span>
               <span>13 / 40 free</span>
             </button>
+          </div>
+        </Tile>
+
+        {/* category contrast */}
+        <Tile>
+          <TileHead left="NOT THOSE LANES — CATEGORY" right="UI · CLI · HARNESS" />
+          <div className="grid gap-3 px-4 py-4 font-mono text-sm sm:grid-cols-3">
+            <div>
+              <p className="text-[0.65rem] tracking-wide text-ph-dim uppercase">ChatGPT-alt UIs</p>
+              <p className="mt-1 text-ph-mute">Open WebUI · LibreChat · omn1</p>
+              <p className="mt-2 text-ph-dim">They won “one chat / kill the tabs.” We are not another UI.</p>
+            </div>
+            <div>
+              <p className="text-[0.65rem] tracking-wide text-ph-dim uppercase">Claude Code alts</p>
+              <p className="mt-1 text-ph-mute">OpenCode · terminal agents</p>
+              <p className="mt-2 text-ph-dim">Coding CLIs. We do not claim that parity.</p>
+            </div>
+            <div>
+              <p className="text-[0.65rem] tracking-wide text-ph-tool uppercase">Apostle</p>
+              <p className="mt-1 text-ph-bone">Harness + desk</p>
+              <p className="mt-2 text-ph-mute">
+                Install <span className="text-ph-bone">your</span> assistant product. Themes, plugins,
+                Missing.
+              </p>
+            </div>
           </div>
         </Tile>
 
@@ -624,8 +650,6 @@ export function Landing() {
 
               <p className="font-marginalia text-xl text-ph-bone italic sm:text-2xl">
                 boring is the feature.
-                <br />
-                boring is how you charge for it.
               </p>
             </div>
           </div>
@@ -669,8 +693,7 @@ export function Landing() {
           <Tile>
             <div className="flex h-full flex-col justify-between gap-6 px-4 py-5">
               <p className="font-marginalia text-xl leading-snug text-ph-bone italic sm:text-2xl">
-                A solo developer should be able to point this at their own audience, charge for it,
-                and{" "}
+                A solo developer should be able to point this at their own audience and{" "}
                 <span className="text-ph-focus">not maintain an agent framework.</span>
               </p>
               <a
@@ -753,7 +776,7 @@ export function Landing() {
 
       <footer className="border-t-2 border-ph-border bg-ph-void">
         <div className="mx-auto flex max-w-[72rem] flex-col gap-2 px-3 py-3 font-mono text-[0.65rem] tracking-wide text-ph-dim uppercase sm:flex-row sm:items-center sm:justify-between">
-          <span>APOSTLE — WORDPRESS FOR A CHAT ASSISTANT</span>
+          <span>APOSTLE — OPEN-SOURCE HARNESS TO INSTALL YOUR OWN AI ASSISTANT</span>
           <span>KEYS 1–7 SWITCH WORKSPACE</span>
           <a href={GITHUB} target="_blank" rel="noreferrer" className="text-ph-bone hover:text-ph-focus">
             GITHUB.COM/JUSTUSEAPEN/APOSTLE

@@ -4,6 +4,7 @@ import { clockPlugin } from "./plugins/clock.ts";
 import { computerPlugin } from "./plugins/computer.ts";
 import { createMissingPlugin } from "./plugins/create-missing.ts";
 import { fetchPagePlugin } from "./plugins/fetch-page.ts";
+import { hashPlugin } from "./plugins/hash.ts";
 import type { ApostlePlugin } from "./plugins/types.ts";
 
 /**
@@ -31,6 +32,7 @@ const INSTALLED: ApostlePlugin[] = [
   fetchPagePlugin,
   calcPlugin,
   createMissingPlugin,
+  hashPlugin,
   computerPlugin,
   browserPlugin,
 ];
@@ -57,6 +59,11 @@ const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prom
     prompt:
       "File this Missing ask on the Desk with the create_missing tool: title \"",
   },
+  hash: {
+    command: "hash",
+    aliases: ["sha256", "checksum", "digest"],
+    prompt: "Hash this text with the hash tool (sha256): ",
+  },
   computer: {
     command: "computer",
     aliases: ["shell", "fs", "workspace", "vfs"],
@@ -70,7 +77,6 @@ const PLUGIN_PROMPTS: Record<string, { command: string; aliases?: string[]; prom
       "Use the browser tool (allowlisted Playwright). Call action open with url https://example.com then snapshot. ",
   },
 };
-
 export function listSlashSkills(): SlashSkill[] {
   const fromPlugins: SlashSkill[] = INSTALLED.map((p) => {
     const preset = PLUGIN_PROMPTS[p.id] ?? {

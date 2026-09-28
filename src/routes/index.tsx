@@ -9,7 +9,7 @@ import { SlashMenu } from "@/components/apostle/slash-menu";
 import { ApprovalCard, ToolCard } from "@/components/apostle/tool-card";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { listMessages, listThreads, sendMessage, importComputerFiles, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
+import { listMessages, listThreads, sendMessage, importComputerFiles, renameThread, deleteThread, reorderThreads, searchThreads, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
 import {
   filterSlashSkills,
   listSlashSkills,
@@ -54,6 +54,12 @@ function Chat() {
   const [slashIndex, setSlashIndex] = useState(0);
   const [showApprovalDemo, setShowApprovalDemo] = useState(false);
   const [artifactsTick, setArtifactsTick] = useState(0);
+  const [threadQuery, setThreadQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<(ThreadRow & { snippet?: string | null })[] | null>(
+    null,
+  );
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
   const allSkills = useMemo(() => listSlashSkills(), []);
 
@@ -169,6 +175,53 @@ function Chat() {
     setShowApprovalDemo(false);
   }
 
+  async function onSearchThreads(q: string) {
+    setThreadQuery(q);
+    if (!q.trim()) {
+      setSearchHits(null);
+      return;
+    }
+    try {
+      const res = await searchThreads({ data: { query: q } });
+      setSearchHits(res.threads);
+    } catch {
+      setSearchHits([]);
+    }
+  }
+
+  async function onRenameThread(id: string) {
+    const title = renameDraft.trim();
+    if (!title) return;
+    await renameThread({ data: { id, title } });
+    setRenamingId(null);
+    await refreshThreads();
+  }
+
+  async function onDeleteThread(id: string) {
+    if (!window.confirm("Delete this thread and its messages?")) return;
+    await deleteThread({ data: { id } });
+    if (active === id) {
+      setActive(null);
+      setMessages([]);
+    }
+    await refreshThreads();
+  }
+
+  async function moveThread(id: string, dir: -1 | 1) {
+    const ids = threads.map((t) => t.id);
+    const i = ids.indexOf(id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= ids.length) return;
+    const next = [...ids];
+    const tmp = next[i]!;
+    next[i] = next[j]!;
+    next[j] = tmp;
+    await reorderThreads({ data: { ids: next } });
+    await refreshThreads();
+  }
+
+  const visibleThreads: (ThreadRow & { snippet?: string | null })[] = searchHits ?? threads;
+
   function applySkill(skill: SlashSkill) {
     if (skill.kind === "desk") {
       setDraft("");
@@ -251,28 +304,107 @@ function Chat() {
         <aside
           className={`${openList ? "flex" : "hidden"} absolute inset-x-0 top-14 z-10 max-h-[70dvh] flex-col border-b-2 border-ph-border bg-ph-void lg:static lg:flex lg:max-h-none lg:border-b-0 lg:border-r-2`}
         >
-          <div className="border-b-2 border-ph-border p-2.5">
+          <div className="border-b-2 border-ph-border p-2.5 space-y-2">
             <PhButton tone="focus" className="h-10 w-full" onClick={fresh}>
               New thread
             </PhButton>
+            <PhInput
+              value={threadQuery}
+              onChange={(e) => void onSearchThreads(e.target.value)}
+              placeholder="Search threads…"
+              className="h-9 w-full text-xs"
+              aria-label="Search threads"
+            />
           </div>
           <ul className="flex-1 overflow-y-auto px-1.5 py-2">
-            {threads.length === 0 && (
-              <li className="px-2 py-3 font-mono text-sm text-ph-dim">No threads yet.</li>
+            {visibleThreads.length === 0 && (
+              <li className="px-2 py-3 font-mono text-sm text-ph-dim">
+                {threadQuery.trim() ? "No matches." : "No threads yet."}
+              </li>
             )}
-            {threads.map((t) => (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  onClick={() => openThread(t.id)}
-                  className={`w-full truncate border-2 px-3 py-2.5 text-left font-mono text-sm ${
-                    t.id === active
-                      ? "border-ph-focus bg-ph-tile text-ph-bone"
-                      : "border-transparent text-ph-dim hover:border-ph-border hover:text-ph-bone"
-                  }`}
-                >
-                  {t.title}
-                </button>
+            {visibleThreads.map((t, idx) => (
+              <li key={t.id} className="mb-1">
+                {renamingId === t.id ? (
+                  <div className="flex gap-1 px-1">
+                    <PhInput
+                      value={renameDraft}
+                      onChange={(e) => setRenameDraft(e.target.value)}
+                      className="h-9 flex-1 text-xs"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void onRenameThread(t.id);
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="border-2 border-ph-focus px-2 text-[0.6rem] text-ph-focus uppercase"
+                      onClick={() => void onRenameThread(t.id)}
+                    >
+                      Ok
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className={`border-2 ${
+                      t.id === active
+                        ? "border-ph-focus bg-ph-tile"
+                        : "border-transparent hover:border-ph-border"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => openThread(t.id)}
+                      className={`w-full truncate px-3 py-2 text-left font-mono text-sm ${
+                        t.id === active ? "text-ph-bone" : "text-ph-dim hover:text-ph-bone"
+                      }`}
+                    >
+                      {t.title}
+                    </button>
+                    {t.snippet ? (
+                      <p className="truncate px-3 pb-1 text-[0.6rem] text-ph-dim">{t.snippet}</p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-1 border-t-2 border-ph-border px-2 py-1">
+                      <button
+                        type="button"
+                        className="text-[0.6rem] tracking-wide text-ph-dim uppercase hover:text-ph-bone"
+                        onClick={() => {
+                          setRenamingId(t.id);
+                          setRenameDraft(t.title);
+                        }}
+                      >
+                        Rename
+                      </button>
+                      <button
+                        type="button"
+                        className="text-[0.6rem] tracking-wide text-ph-dim uppercase hover:text-ph-missing"
+                        onClick={() => void onDeleteThread(t.id)}
+                      >
+                        Delete
+                      </button>
+                      {!searchHits && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            className="text-[0.6rem] tracking-wide text-ph-dim uppercase hover:text-ph-bone disabled:opacity-30"
+                            onClick={() => void moveThread(t.id, -1)}
+                          >
+                            Up
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === threads.length - 1}
+                            className="text-[0.6rem] tracking-wide text-ph-dim uppercase hover:text-ph-bone disabled:opacity-30"
+                            onClick={() => void moveThread(t.id, 1)}
+                          >
+                            Down
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

@@ -183,6 +183,52 @@ html[data-mode="dark"] .ph-scanlines {
 }
 
 /* ------------------------------------------------------------------
+   Ink (public) — second Phosphor-compatible catalog theme.
+   Cool slate / cyan tokens. SI stays private. See docs/themes.md.
+   ------------------------------------------------------------------ */
+html[data-theme="ink"] {
+  --color-ph-void: #0a1018;
+  --color-ph-tile: #101820;
+  --color-ph-term: #0c141c;
+  --color-ph-raise: #182430;
+  --color-ph-border: #2a3848;
+  --color-ph-line2: #3a4c5c;
+  --color-ph-dim: #7a8a9a;
+  --color-ph-mute: #a8b4c0;
+  --color-ph-bone: #e2e8ee;
+  --color-ph-on: #0a1018;
+  --color-ph-focus: oklch(0.78 0.12 220);
+  --color-ph-missing: oklch(0.72 0.14 25);
+  --color-ph-tool: oklch(0.78 0.11 175);
+  --color-ph-warn: oklch(0.8 0.12 85);
+  --color-ph-scan: rgb(0 20 40 / 0.2);
+
+  --font-sans: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "IBM Plex Mono", "VT323", ui-monospace, monospace;
+  --font-marginalia: "Source Serif 4", "Instrument Serif", ui-serif, Georgia, serif;
+  --radius: 0;
+}
+
+html[data-theme="ink"][data-mode="light"] {
+  --color-ph-void: #e8eef4;
+  --color-ph-tile: #f4f7fa;
+  --color-ph-term: #eef2f6;
+  --color-ph-raise: #dde5ee;
+  --color-ph-border: #1a2834;
+  --color-ph-line2: #8a9aaa;
+  --color-ph-dim: #4a5a6a;
+  --color-ph-mute: #2a3848;
+  --color-ph-bone: #0c141c;
+  --color-ph-on: #ffffff;
+  --color-ph-focus: oklch(0.48 0.14 220);
+  --color-ph-missing: oklch(0.5 0.16 25);
+  --color-ph-tool: oklch(0.45 0.1 175);
+  --color-ph-warn: oklch(0.5 0.12 85);
+  --color-ph-scan: rgb(10 30 50 / 0.04);
+}
+
+/* ------------------------------------------------------------------
    Super Intelligence (private) — TMTG brand board tokens.
    Selected via data-theme="si". Does not alter Phosphor defaults.
    Source: Buy-in design set · Brand Board (Signal / Pulse / Void / Bone).

@@ -10,11 +10,17 @@ import {
 
 export type ColorMode = "dark" | "light";
 
-/** Public default vs private enterprise skins. Themes never register tools. */
-export type ProductTheme = "phosphor" | "si";
+/**
+ * Public themes are catalogued. Private themes (SI) are enable-only — not a public catalog entry.
+ * Themes never register tools. See docs/themes.md.
+ */
+export type ProductTheme = "phosphor" | "ink" | "si";
 
 export const MODE_STORAGE_KEY = "apostle-mode";
 export const THEME_STORAGE_KEY = "apostle-theme";
+
+/** Public catalog — Phosphor default + Ink (second public skin). */
+export const PUBLIC_THEMES = ["phosphor", "ink"] as const;
 
 /** Private TMTG / Super Intelligence skin — not the public Phosphor default. */
 export const PRIVATE_THEMES = ["si"] as const;
@@ -32,7 +38,11 @@ const ThemeContext = createContext<{
 } | null>(null);
 
 export function isProductTheme(value: string | null | undefined): value is ProductTheme {
-  return value === "phosphor" || value === "si";
+  return value === "phosphor" || value === "ink" || value === "si";
+}
+
+export function isPublicTheme(value: string | null | undefined): boolean {
+  return value === "phosphor" || value === "ink";
 }
 
 export function readStoredMode(): ColorMode {
@@ -92,11 +102,14 @@ function syncThemeColorMeta() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const mode = root.getAttribute("data-mode") === "light" ? "light" : "dark";
-  const theme = root.getAttribute("data-theme") === "si" ? "si" : "phosphor";
+  const themeAttr = root.getAttribute("data-theme");
+  const theme = isProductTheme(themeAttr) ? themeAttr : "phosphor";
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
   if (theme === "si") {
     meta.setAttribute("content", mode === "light" ? "#ffffff" : "#07070c");
+  } else if (theme === "ink") {
+    meta.setAttribute("content", mode === "light" ? "#e8eef4" : "#0a1018");
   } else {
     meta.setAttribute("content", mode === "light" ? "#dde3ec" : "#0b0c10");
   }
@@ -106,7 +119,7 @@ function syncThemeColorMeta() {
  * FOUC-prevention snippet for `<head>` — keep in sync with applyColorMode /
  * applyProductTheme. Honors ?theme=, localStorage, then optional meta default.
  */
-export const MODE_BOOT_SCRIPT = `(function(){try{var m=localStorage.getItem(${JSON.stringify(MODE_STORAGE_KEY)});if(m!=="light"&&m!=="dark")m="dark";document.documentElement.setAttribute("data-mode",m);document.documentElement.style.colorScheme=m;var t=null;try{t=new URLSearchParams(location.search).get("theme");}catch(e){}if(t!=="phosphor"&&t!=="si"){t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});}if(t!=="phosphor"&&t!=="si"){var meta=document.querySelector('meta[name="apostle-default-theme"]');t=meta&&meta.getAttribute("content");}if(t!=="phosphor"&&t!=="si")t="phosphor";document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)},t);}catch(e){}}catch(e){document.documentElement.setAttribute("data-mode","dark");document.documentElement.setAttribute("data-theme","phosphor");document.documentElement.style.colorScheme="dark";}})();`;
+export const MODE_BOOT_SCRIPT = `(function(){try{var m=localStorage.getItem(${JSON.stringify(MODE_STORAGE_KEY)});if(m!=="light"&&m!=="dark")m="dark";document.documentElement.setAttribute("data-mode",m);document.documentElement.style.colorScheme=m;var t=null;try{t=new URLSearchParams(location.search).get("theme");}catch(e){}if(t!=="phosphor"&&t!=="ink"&&t!=="si"){t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});}if(t!=="phosphor"&&t!=="ink"&&t!=="si"){var meta=document.querySelector('meta[name="apostle-default-theme"]');t=meta&&meta.getAttribute("content");}if(t!=="phosphor"&&t!=="ink"&&t!=="si")t="phosphor";document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)},t);}catch(e){}}catch(e){document.documentElement.setAttribute("data-mode","dark");document.documentElement.setAttribute("data-theme","phosphor");document.documentElement.style.colorScheme="dark";}})();`;
 
 export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ColorMode>("dark");
@@ -198,7 +211,7 @@ export function ModeToggle({ className = "" }: { className?: string }) {
   );
 }
 
-/** Desk / pitch control — Phosphor stays default; SI is the private enterprise skin. */
+/** Desk / pitch control — public catalog first; SI stays private / enable-only. */
 export function ThemeSelect({ className = "" }: { className?: string }) {
   const { theme, setTheme } = useProductTheme();
   return (
@@ -214,6 +227,7 @@ export function ThemeSelect({ className = "" }: { className?: string }) {
         aria-label="Product theme"
       >
         <option value="phosphor">Phosphor (public)</option>
+        <option value="ink">Ink (public)</option>
         <option value="si">Super Intelligence (private)</option>
       </select>
     </label>

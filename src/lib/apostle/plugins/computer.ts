@@ -19,7 +19,7 @@ export const computerPlugin: ApostlePlugin = {
     function: {
       name: "computer",
       description:
-        "Browser-sandbox Computer: list/read/write files in a per-thread virtual workspace, or run a constrained shell command (ls, cat, echo, mkdir, rm, head, wc, find, help). Not a host terminal — no network, no real bash. Actions: list, read, write, run, info. Prefer this when the user wants files or a simple shell in chat.",
+        "Browser-sandbox Computer: list/read/write files in a per-thread virtual workspace, or run a constrained shell command (ls, cat, echo, mkdir, rm, cp, mv, grep, head, wc, find, help). Not a host terminal — no network, no real bash. Actions: list, read, write, run, info. Prefer this when the user wants files or a simple shell in chat.",
       parameters: {
         type: "object",
         properties: {

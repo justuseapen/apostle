@@ -6,8 +6,8 @@ export const COMPUTER_LIMITS = `Apostle Computer (browser sandbox)
 
 What works now:
 • Virtual workspace per chat thread (list / read / write files)
-• Constrained shell builtins (ls, cat, echo, mkdir, rm, head, wc, find) — not a host terminal
-• Artifacts drawer lists workspace files
+• Constrained shell builtins (ls, cat, echo, mkdir, rm, cp, mv, grep, head, wc, find) — not a host terminal
+• Artifacts drawer lists workspace files (preview, grant folder, OPFS mirror)
 • Optional: grant a local folder via the File System Access API (Chrome) to import into the VFS; optional OPFS mirror in this browser
 
 What does NOT work (needs native / Firecracker later):
@@ -16,7 +16,7 @@ What does NOT work (needs native / Firecracker later):
 • Network from the shell (default deny — law)
 • Persistent VM / Firecracker-class isolation (enterprise Spike — not OSS default)
 
-Next honest deepen: Better VM (clearer sandbox + richer runtime inside the browser cage).
+Next honest deepen: Better VM (clearer sandbox + richer runtime inside the browser cage). cp/mv/grep are small Better-VM steps — still VFS-only.
 At your own risk of any data you grant or import into the workspace.
 OSS spike — not an enterprise sandbox proof. Not “done.”`;
 

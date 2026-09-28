@@ -57,6 +57,20 @@ export function sessionInfo(userId: string, threadId: string) {
   return { open: true as const, url: s.url, title: s.title };
 }
 
+export function listSessionsForUser(userId: string) {
+  const prefix = `${userId}:`;
+  const out: { threadId: string; url: string; title: string }[] = [];
+  for (const [k, s] of sessions) {
+    if (!k.startsWith(prefix)) continue;
+    out.push({
+      threadId: k.slice(prefix.length),
+      url: s.url,
+      title: s.title,
+    });
+  }
+  return out;
+}
+
 export async function closeSession(userId: string, threadId: string) {
   const k = key(userId, threadId);
   const s = sessions.get(k);

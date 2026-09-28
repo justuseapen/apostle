@@ -23,5 +23,9 @@ describe("gaps", () => {
     assert.ok(!titles.includes("Launch ready for OSS attention"));
     const browser = ENTERPRISE_GAP_SEEDS.find((s) => s.title === "Allowlisted browser trail");
     assert.ok(browser?.note.toLowerCase().includes("partial"));
+    const search = ENTERPRISE_GAP_SEEDS.find((s) => s.title === "Search through threads");
+    assert.ok(search?.note.toLowerCase().includes("partial"));
+    const threads = ENTERPRISE_GAP_SEEDS.find((s) => s.title === "Thread management");
+    assert.ok(threads?.note.toLowerCase().includes("partial"));
   });
 });

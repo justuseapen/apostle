@@ -23,6 +23,8 @@ Artifacts (Context → Artifacts) lists the thread’s workspace files, with:
 - **Grant folder** — File System Access API (Chrome/Edge) imports shallow text files into the VFS
 - **OPFS** — optional Origin Private File System mirror status
 - Collapsible **Capabilities + limits** copy
+- File count + `/computer` run hint in the drawer
+- Shell deepen (Better VM steps): `cp`, `mv`, `grep` (literal) — still VFS-only, not host
 
 ## How to try
 
@@ -45,7 +47,7 @@ Without a model that emits tool calls, you can still demo FS via Artifacts **Gra
 ## Capabilities (honest)
 
 - Per-thread **virtual filesystem** persisted in Postgres/PGLite (`computer_files`) — not the Mac disk by default
-- Constrained shell: `ls`, `cat`, `echo` (+ `>` / `>>`), `mkdir`, `rm`, `touch`, `head`, `wc`, `find`, `pwd`, `clear`, `help`
+- Constrained shell: `ls`, `cat`, `echo` (+ `>` / `>>`), `mkdir`, `rm`, `cp`, `mv`, `grep`, `touch`, `head`, `wc`, `find`, `pwd`, `clear`, `help`
 - Browser APIs: **OPFS** mirror, **File System Access** directory grant (when available)
 - Network: **none** (plugin `needs.network: []` — default deny)
 

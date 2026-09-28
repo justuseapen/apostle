@@ -187,4 +187,75 @@ export async function clearWorkspace(ws: WorkspaceRef): Promise<number> {
   return rows.length;
 }
 
+/** Copy one file inside the VFS (Better VM quick win — still not host FS). */
+export async function copyFile(ws: WorkspaceRef, src: string, dst: string): Promise<string> {
+  const srcNorm = normalizePath(src);
+  const dstNorm = normalizePath(dst);
+  if (typeof srcNorm !== "string") return srcNorm.error;
+  if (typeof dstNorm !== "string") return dstNorm.error;
+  const content = await readFile(ws, srcNorm);
+  if (content.startsWith("No such file") || content.startsWith("Cannot")) return content;
+  const wrote = await writeFile(ws, dstNorm, content);
+  if (wrote.startsWith("Wrote")) return `Copied ${srcNorm} → ${dstNorm}`;
+  return wrote;
+}
+
+/** Move = copy then remove source. */
+export async function moveFile(ws: WorkspaceRef, src: string, dst: string): Promise<string> {
+  const srcNorm = normalizePath(src);
+  const dstNorm = normalizePath(dst);
+  if (typeof srcNorm !== "string") return srcNorm.error;
+  if (typeof dstNorm !== "string") return dstNorm.error;
+  const copied = await copyFile(ws, srcNorm, dstNorm);
+  if (!copied.startsWith("Copied")) return copied;
+  await removePath(ws, srcNorm, false);
+  return `Moved ${srcNorm} → ${dstNorm}`;
+}
+
+/**
+ * Line grep over one file or the whole workspace.
+ * Pattern is a literal substring (not a full regex engine — keeps the cage small).
+ */
+export async function grepWorkspace(
+  ws: WorkspaceRef,
+  pattern: string,
+  opts?: { path?: string; ignoreCase?: boolean },
+): Promise<string> {
+  const needle = (pattern || "").slice(0, 200);
+  if (!needle) return "Usage: grep [-i] <pattern> [path]";
+  const files = await allFiles(ws);
+  let targets = files;
+  if (opts?.path) {
+    const norm = normalizePath(opts.path);
+    if (typeof norm !== "string") return norm.error;
+    if (norm === "/") {
+      /* whole workspace */
+    } else {
+      const exact = files.find((f) => f.path === norm);
+      if (exact) targets = [exact];
+      else {
+        targets = files.filter((f) => f.path === norm || isUnder(norm, f.path));
+        if (!targets.length) return `No such file: ${norm}`;
+      }
+    }
+  }
+  const hay = opts?.ignoreCase ? needle.toLowerCase() : needle;
+  const hits: string[] = [];
+  for (const f of targets) {
+    const lines = f.content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      const cmp = opts?.ignoreCase ? line.toLowerCase() : line;
+      if (cmp.includes(hay)) {
+        hits.push(`${f.path}:${i + 1}:${line}`);
+        if (hits.length >= 200) {
+          hits.push("… truncated (200 hits)");
+          return hits.join("\n");
+        }
+      }
+    }
+  }
+  return hits.length ? hits.join("\n") : "(no matches)";
+}
+
 export { basename, parentPath, MAX_CONTENT, MAX_FILES };

@@ -61,7 +61,9 @@ node scripts/verify-browser-use.mjs
 - Server-side **Playwright Chromium** (already in Apostle/Grok envs)
 - Per-thread in-memory browser session (dies on server restart)
 - Screenshot rows in Postgres/PGLite (`browser_screenshots`), capped per thread
-- Desk enable toggle + allowlist editor; soft-enable for seeded local ops
+- Desk enable toggle + allowlist editor (host count on save); soft-enable for seeded local ops
+- Desk → Browser → **Live sessions** (list / close in-memory Playwright sessions)
+- Context → Browser: session status + **Close session**; click/type wait for visible selectors
 
 ## Limits (ceiling)
 

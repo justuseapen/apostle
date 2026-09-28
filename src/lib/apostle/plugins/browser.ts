@@ -171,11 +171,14 @@ export const browserPlugin: ApostlePlugin = {
     if (action === "click") {
       const selector = (args.selector || "").trim();
       if (!selector) return "click needs selector.";
+      if (selector.length > 300) return "selector is too long.";
       const info = sessionInfo(ctx.userId, threadId);
       if (!info.open) return "No open page. open an allowlisted url first.";
       const page = await getOrCreatePage(ctx.userId, threadId);
       try {
+        await page.waitForSelector(selector, { state: "visible", timeout: 8_000 });
         await page.click(selector, { timeout: 8_000 });
+        await page.waitForLoadState("domcontentloaded", { timeout: 8_000 }).catch(() => null);
       } catch (e) {
         return `Click failed: ${e instanceof Error ? e.message : "error"}`;
       }
@@ -210,11 +213,16 @@ export const browserPlugin: ApostlePlugin = {
       const selector = (args.selector || "").trim();
       const text = args.text ?? "";
       if (!selector) return "type needs selector.";
+      if (selector.length > 300) return "selector is too long.";
+      if (text.length > 4000) return "text is too long (max 4000).";
       const info = sessionInfo(ctx.userId, threadId);
       if (!info.open) return "No open page. open an allowlisted url first.";
       const page = await getOrCreatePage(ctx.userId, threadId);
       try {
+        await page.waitForSelector(selector, { state: "visible", timeout: 8_000 });
         await page.fill(selector, text, { timeout: 8_000 });
+        // blur so controlled inputs commit; then snapshot
+        await page.locator(selector).evaluate((el) => (el as HTMLElement).blur()).catch(() => null);
       } catch (e) {
         return `Type failed: ${e instanceof Error ? e.message : "error"}`;
       }

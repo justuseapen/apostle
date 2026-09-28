@@ -15,6 +15,9 @@ export const SHELL_HELP = `Computer shell (browser sandbox — not your Mac):
   touch <path>
   mkdir [-p] <path>
   rm [-r|-rf] <path>
+  cp <src> <dst>
+  mv <src> <dst>
+  grep [-i] <pattern> [path]
   head [-n N] <path>
   wc <path>
   find [path]
@@ -133,6 +136,22 @@ export async function runShell(ws: WorkspaceRef, command: string): Promise<strin
         .map((r) => r.path)
         .filter((p) => (norm === "/" ? true : p === norm || p.startsWith(norm.replace(/\/$/, "") + "/")));
       return hits.length ? hits.join("\n") : "(none)";
+    }
+    case "cp": {
+      if (!args[1] || !args[2]) return "Usage: cp <src> <dst>";
+      return vfs.copyFile(ws, args[1], args[2]);
+    }
+    case "mv": {
+      if (!args[1] || !args[2]) return "Usage: mv <src> <dst>";
+      return vfs.moveFile(ws, args[1], args[2]);
+    }
+    case "grep": {
+      const ignoreCase = args.includes("-i");
+      const rest = args.slice(1).filter((a) => a !== "-i");
+      const pattern = rest[0];
+      const path = rest[1];
+      if (!pattern) return "Usage: grep [-i] <pattern> [path]";
+      return vfs.grepWorkspace(ws, pattern, { path, ignoreCase });
     }
     case "clear": {
       const n = await vfs.clearWorkspace(ws);

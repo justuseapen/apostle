@@ -1,15 +1,17 @@
 # syntax=docker/dockerfile:1
 # Coolify / bare-metal image for Apostle (node-server Nitro preset).
-# Build has no DATABASE_URL; migrations run at container start via `npm start`.
+# Build installs devDependencies (vite/nitro). Migrations run at container start.
 
 FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Coolify may inject NODE_ENV=production as a build ARG; force full install.
+RUN npm ci --include=dev
 
 FROM deps AS build
 COPY . .
-ENV NODE_ENV=production
+# Keep NODE_ENV unset/development-ish for the Vite/Nitro toolchain.
+ENV NITRO_PRESET=node-server
 RUN npm run build:selfhost
 
 FROM node:22-bookworm-slim AS runtime

@@ -129,6 +129,17 @@ Without `DATABASE_URL`, data lives in an embedded Postgres that resets when the 
 
 Sign-in is Google or X through the hosted broker. If that redirect is refused on your machine, email-and-password is the local fallback (`src/lib/auth/email-password.ts`).
 
+## Deploy your own (Coolify / Docker)
+
+Long-running installs use the **node-server** path, not the Vercel preset:
+
+```bash
+npm run build:selfhost   # NITRO_PRESET=node-server → .output/server
+# or: docker build -t apostle:local .
+```
+
+Set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` on the host. Coolify: `build_pack=dockerfile`, port `8080`, GitHub repo as **`owner/repo`** (not a full `https://github.com/…` URL). Checklist and gotchas: [`docs/coolify-selfhost.md`](./docs/coolify-selfhost.md).
+
 ## Docs
 
 | Doc | What |

@@ -25,7 +25,11 @@ export async function getOrCreatePage(
   const existing = sessions.get(k);
   if (existing) return existing.page;
 
-  const { chromium } = await import("playwright");
+  if (!import.meta.env.SSR) {
+    throw new Error("Browser sessions are server-only.");
+  }
+  // @vite-ignore — never pull Playwright into the client graph.
+  const { chromium } = await import(/* @vite-ignore */ "playwright");
   const browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],

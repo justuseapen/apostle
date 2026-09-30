@@ -138,6 +138,7 @@ Sign-in is Google or X through the hosted broker. If that redirect is refused on
 | [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink); SI stays private |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |
+| [`docs/coolify-selfhost.md`](./docs/coolify-selfhost.md) | Coolify / Docker node-server deploy |
 | [`docs/demo-script.md`](./docs/demo-script.md) | Short demo for OSS audiences |
 | [`docs/enterprise-buyin-roadmap.md`](./docs/enterprise-buyin-roadmap.md) | Enterprise ask matrix (SI private) |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Missing + plugin/theme rituals + PR norms |

@@ -12,6 +12,34 @@ import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 import { appEnvPlugin } from "./scripts/app-env-plugin.mjs";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
 
+
+/** Keep Playwright out of the browser bundle (Browser plugin is server-only). */
+function stubPlaywrightOnClient(): Plugin {
+  const stub = "\0apostle-playwright-stub";
+  return {
+    name: "apostle:stub-playwright-client",
+    apply: "build",
+    resolveId(id, _importer, options) {
+      if (options?.ssr) return null;
+      if (
+        id === "playwright" ||
+        id === "playwright-core" ||
+        id === "chromium-bidi" ||
+        id.startsWith("playwright/") ||
+        id.startsWith("playwright-core/") ||
+        id.startsWith("chromium-bidi/")
+      ) {
+        return stub;
+      }
+      return null;
+    },
+    load(id) {
+      if (id !== stub) return null;
+      return "export default {}; export const chromium = {}; export const firefox = {}; export const webkit = {};";
+    },
+  };
+}
+
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
 function hasGlobbedMigrations(root: string): boolean {
   try {
@@ -157,7 +185,14 @@ export default defineConfig(({ command, isPreview }) => ({
     strictPort: true,
   },
   resolve: { tsconfigPaths: true },
+  ssr: {
+    external: ["playwright", "playwright-core", "chromium-bidi"],
+  },
+  optimizeDeps: {
+    exclude: ["playwright", "playwright-core", "chromium-bidi"],
+  },
   plugins: [
+    stubPlaywrightOnClient(),
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),
@@ -170,11 +205,24 @@ export default defineConfig(({ command, isPreview }) => ({
     ...(command === "build" || isPreview
       ? [
           nitro({
-            preset: "vercel",
+            // Default stays Vercel for the platform deploy path. Coolify / bare
+            // metal set NITRO_PRESET=node-server (see build:selfhost).
+            preset: process.env.NITRO_PRESET || "vercel",
             // Auto-registers server/middleware/* (the PWA install page +
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            // Browser plugin loads Playwright at runtime; bundling playwright-core
+            // pulls unresolved optional deps (chromium-bidi) and blows the build.
+            rollupConfig: {
+              external: [
+                "playwright",
+                "playwright-core",
+                "chromium-bidi",
+                /^playwright.*/,
+                /^chromium-bidi.*/,
+              ],
+            },
           }),
         ]
       : []),

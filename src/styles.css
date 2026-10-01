@@ -229,6 +229,61 @@ html[data-theme="ink"][data-mode="light"] {
 }
 
 /* ------------------------------------------------------------------
+   Eapen (public) — eapentechnology.com workshop brand.
+   Warm ink / paper / gold tokens from styles/site.css :root.
+   See docs/themes.md.
+   ------------------------------------------------------------------ */
+html[data-theme="eapen"] {
+  --color-ph-void: #131111; /* ink-deep */
+  --color-ph-tile: #211c1c; /* surface */
+  --color-ph-term: #191616; /* ink */
+  --color-ph-raise: #2a2424;
+  --color-ph-border: #3f3834;
+  --color-ph-line2: #5a524c;
+  --color-ph-dim: #8a8078;
+  --color-ph-mute: #b9aea3; /* muted */
+  --color-ph-bone: #f1ece2; /* paper / text */
+  --color-ph-on: #191616;
+  --color-ph-focus: #d6b36a; /* gold */
+  --color-ph-missing: #c45a64; /* red lifted for dark UI */
+  --color-ph-tool: #7a9e8f; /* sage — secondary accent */
+  --color-ph-warn: #e7c986; /* gold hover */
+  --color-ph-scan: rgb(0 0 0 / 0.18);
+
+  --font-sans: "Archivo", Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Newsreader", Georgia, ui-serif, serif;
+  --font-marginalia: "Newsreader", Georgia, ui-serif, serif;
+  --radius: 0;
+}
+
+html[data-theme="eapen"][data-mode="light"] {
+  --color-ph-void: #f1ece2; /* paper */
+  --color-ph-tile: #faf7f1;
+  --color-ph-term: #e6ded1; /* paper-dark */
+  --color-ph-raise: #ddd4c4;
+  --color-ph-border: #191616;
+  --color-ph-line2: #9a8f84;
+  --color-ph-dim: #6a6058;
+  --color-ph-mute: #3a3330;
+  --color-ph-bone: #191616;
+  --color-ph-on: #ffffff;
+  --color-ph-focus: #b8924a;
+  --color-ph-missing: #762a33; /* brand red */
+  --color-ph-tool: #4f7466;
+  --color-ph-warn: #9a7a2e;
+  --color-ph-scan: rgb(25 22 22 / 0.04);
+}
+
+html[data-theme="eapen"] .ph-scanlines {
+  display: none;
+}
+
+html[data-theme="eapen"] .phosphor {
+  font-family: var(--font-sans);
+}
+
+/* ------------------------------------------------------------------
    Super Intelligence (private) — TMTG brand board tokens.
    Selected via data-theme="si". Does not alter Phosphor defaults.
    Source: Buy-in design set · Brand Board (Signal / Pulse / Void / Bone).

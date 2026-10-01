@@ -21,17 +21,20 @@ Private themes live in `PRIVATE_THEMES` (`si` today). They may appear in Desk as
 
 ## Ritual (checklist)
 
-1. Pick a short kebab id (e.g. `ink`). Avoid colliding with `phosphor` or `si`.
-2. Extend `ProductTheme` / `isProductTheme` / boot script in `src/lib/theme.tsx`.
+1. Pick a short kebab id (e.g. `ink`, `eapen`). Avoid colliding with `phosphor` or `si`.
+2. Extend `ProductTheme` / `isProductTheme` / `isPublicTheme` / boot script in `src/lib/theme.tsx` (boot script allowlist is duplicated — keep it in sync).
 3. Add `html[data-theme="…"]` (+ light mode) token block in `src/styles.css` — remap the same `--color-ph-*` variables Phosphor uses.
-4. Add the id to `PUBLIC_THEMES` (or `PRIVATE_THEMES` if it must stay enable-only).
-5. Expose it in `ThemeSelect` (public options first; keep SI labeled private).
-6. Verify: `?theme=<id>`, Desk toggle, light/dark (`data-mode`), chat + desk + landing still readable.
-7. Document in README Docs table. Do **not** put SI chrome in OSS promo screenshots.
+4. Add any new webfonts to the Google Fonts link in `src/routes/__root.tsx`.
+5. Add the id to `PUBLIC_THEMES` (or `PRIVATE_THEMES` if it must stay enable-only).
+6. Expose it in `ThemeSelect` (public options first; keep SI labeled private).
+7. Verify: `?theme=<id>`, Desk toggle, light/dark (`data-mode`), chat + desk + landing still readable.
+8. Document in README Docs table. Do **not** put SI chrome in OSS promo screenshots.
 
-## Shipping example: Ink
+## Shipping examples
 
-`ink` is the second **public** theme — cool slate / cyan tokens on the same Phosphor surface classes. Try:
+### Ink
+
+`ink` — cool slate / cyan tokens on the same Phosphor surface classes:
 
 ```bash
 npm run dev
@@ -39,6 +42,29 @@ npm run dev
 # or Desk → Theme → Ink (public)
 # reset: ?theme=phosphor
 ```
+
+### Eapen
+
+`eapen` — warm ink / paper / gold tokens from [eapentechnology.com](https://eapentechnology.com) (`styles/site.css` `:root`):
+
+```bash
+npm run dev
+# http://localhost:8080/?theme=eapen
+# or Desk → Theme → Eapen (public)
+```
+
+Source map (brand → Phosphor):
+
+| Brand token | Phosphor token |
+|-------------|----------------|
+| `--ink-deep` `#131111` | `--color-ph-void` |
+| `--surface` `#211c1c` | `--color-ph-tile` |
+| `--ink` `#191616` | `--color-ph-term` / `--color-ph-on` |
+| `--paper` `#f1ece2` | `--color-ph-bone` (dark) / void (light) |
+| `--muted` `#b9aea3` | `--color-ph-mute` |
+| `--gold` `#d6b36a` | `--color-ph-focus` |
+| `--red` `#762a33` | `--color-ph-missing` (light; lifted on dark) |
+| Archivo / Newsreader / IBM Plex Mono | `--font-sans` / `--font-display` / `--font-mono` |
 
 SI remains: `?theme=si` or Desk → Super Intelligence (private).
 

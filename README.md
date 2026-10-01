@@ -121,7 +121,7 @@ Open `http://localhost:8080`. Or configure DESK (`/admin`) yourself → paste ba
 
 60–90s walkthrough: [`docs/demo-script.md`](./docs/demo-script.md).
 
-Private Super Intelligence skin (does **not** change the public Phosphor default; **not** in the public catalog): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. Second public theme: `?theme=ink` (see [`docs/themes.md`](./docs/themes.md)). For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
+Private Super Intelligence skin (does **not** change the public Phosphor default; **not** in the public catalog): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. Public skins: `?theme=ink` (slate/cyan) and `?theme=eapen` (eapentechnology.com workshop — ink/paper/gold). See [`docs/themes.md`](./docs/themes.md). For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
 
 OpenRouter example: base `https://openrouter.ai/api/v1`, key from openrouter.ai/keys, model ids like `openai/gpt-4o-mini` in the model map.
 
@@ -146,7 +146,7 @@ Set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` on the host. Coo
 |---|---|
 | [`docs/plugins.md`](./docs/plugins.md) | Add a third-party-style plugin in an afternoon |
 | [`docs/plugin-catalog.md`](./docs/plugin-catalog.md) | Launch plugin list (one-liners + honesty) |
-| [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink); SI stays private |
+| [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink, Eapen); SI stays private |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |
 | [`docs/coolify-selfhost.md`](./docs/coolify-selfhost.md) | Coolify / Docker node-server deploy |

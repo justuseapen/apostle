@@ -8,6 +8,7 @@ Apostle is an open-source harness to install your own AI assistant: **themes** c
 2. **Open a PR** against `main` for plugins, docs, or harness fixes. Keep plugins in `src/lib/apostle/plugins/` — do not edit the chat harness to hard-code tools.
 3. Match the frozen plugin contract: declare `needs.network`, secrets, and approvals. Default is deny.
 4. Stay honest in copy: Computer and Browser are **partial / spike**, not “done.” Private customer brand skins stay **out of this repository**. Billing / Stripe stays **out for OSS**.
+5. **Private enterprise adapters** (customer SSO, corpus, brand chrome, plan SKUs) stay **out of this repository** — see [`docs/ports.md`](./docs/ports.md).
 
 ## Add a plugin (afternoon ritual)
 

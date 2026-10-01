@@ -146,6 +146,8 @@ Set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` on the host. Coo
 |---|---|
 | [`docs/plugins.md`](./docs/plugins.md) | Add a third-party-style plugin in an afternoon |
 | [`docs/plugin-catalog.md`](./docs/plugin-catalog.md) | Launch plugin list (one-liners + honesty) |
+| [`docs/ports.md`](./docs/ports.md) | Sovereignty ports (gateway owned; TrueForge below) |
+| [`docs/v1-roadmap.md`](./docs/v1-roadmap.md) | V1 owned context plane roadmap |
 | [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink, Eapen); private skins out of repo |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |

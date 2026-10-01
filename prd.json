@@ -1,0 +1,115 @@
+{
+  "project": "Apostle",
+  "branchName": "cursor/v1-sovereignty-ports-545f",
+  "description": "V1 owned context plane \u2014 gateway + workspace/memory/export ports, replaceable AgentRuntime (TrueForge below the line), self-host product with private enterprise adapters out of tree.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Formalize sovereignty ports and stub adapters",
+      "description": "As an operator integrating Apostle, I want stable port interfaces (Identity, Entitlements, Gateway, Provider, Context, Workspace, Memory, Corpus, AgentRuntime, Skills, Export, Safety, Theme) with OSS stub defaults so enterprise adapters can plug in privately without forking core.",
+      "acceptanceCriteria": [
+        "src/lib/apostle/ports/ exports typed interfaces for all 13 ports listed in docs/v1-roadmap.md",
+        "createDefaultPorts() returns stub implementations that are safe no-ops or thin wrappers over existing gateway helpers where applicable",
+        "docs/ports.md documents each port, ownership boundary, and TrueForge placement",
+        "docs/ports.md states customer brand/SSO/corpus adapters must not be committed to this repo",
+        "node test for ports registry passes",
+        "Typecheck passes",
+        "No customer brand names (e.g. social platforms or holding-company product lines) appear in committed OSS docs or source for this story"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Do not wire TrueForge network client yet \u2014 stub AgentRuntime only. Keep private customer naming out of git."
+    },
+    {
+      "id": "US-002",
+      "title": "Workspace projects schema and store",
+      "description": "As a user, I want projects that contain threads, files, and a prompt library so my AI life is organized above the model line.",
+      "acceptanceCriteria": [
+        "DB migration adds projects, project_files, prompt_library tables (or equivalent) linked to user",
+        "WorkspaceStore port has a real Postgres/PGLite-backed implementation for list/create project and attach thread to project",
+        "Existing threads remain usable (default project or null project_id with backfill)",
+        "Typecheck and relevant tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Portable memory CRUD + panel shell",
+      "description": "As a user, I want visible editable global and project memory that travels across model switches.",
+      "acceptanceCriteria": [
+        "MemoryPort backed by DB with scope global|project",
+        "Chat or Desk UI shows Memory panel list with edit/delete",
+        "ContextAssembler stub reads memory items when assembling (even if not yet injected into live chat)",
+        "Typecheck and tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Model switcher attribution and floor failover",
+      "description": "As a user, I want to switch models mid-thread and see which model answered, with failover to a floor adapter when providers fail.",
+      "acceptanceCriteria": [
+        "Messages store model id attribution",
+        "UI model picker changes thread default without losing history",
+        "GatewayPort resolve path supports failover chain ending at floor/local adapter",
+        "Failover surfaces a plain notice string for the client",
+        "Typecheck and tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Export schema v1 and Vault endpoint",
+      "description": "As a user, I want one-click export of projects, threads, files, memory, prompts, and skills in an open schema.",
+      "acceptanceCriteria": [
+        "docs/export-schema-v1.md published",
+        "ExportPort builds zip or JSON archive for the current user",
+        "Desk or settings Vault entry triggers export download",
+        "Typecheck and tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "AgentRuntimePort local + TrueForge client spike",
+      "description": "As an operator, I want missions and scheduled prompts to run through AgentRuntimePort, with a local stub by default and an optional TrueForge HTTP client.",
+      "acceptanceCriteria": [
+        "Local AgentRuntime stub can enqueue a mission and mark it complete (in-process)",
+        "Optional TrueForge client behind env flag (no hard dependency if unset)",
+        "Desk or docs explain TrueForge sits below the gateway",
+        "Typecheck and tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Skills registry as workspace objects",
+      "description": "As a user, I want skills (instruction + file bundles) stored in my workspace and exportable, separate from harness plugins.",
+      "acceptanceCriteria": [
+        "SkillsRegistry CRUD persisted per user/project",
+        "Skills listed in export schema",
+        "Docs distinguish Skills (workspace) vs Plugins (harness tools)",
+        "Typecheck and tests pass",
+        "No private customer brand names in committed source or docs"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

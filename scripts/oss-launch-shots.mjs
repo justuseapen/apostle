@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Fresh Phosphor-only screenshots for OSS launch (README + store media).
- * Never opens ?theme=si.
+ * Public catalog shots only — never mount private customer chrome.
  */
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

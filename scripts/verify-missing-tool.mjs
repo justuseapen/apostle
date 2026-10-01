@@ -85,7 +85,7 @@ async function main() {
 
   await shot(page, "missing-tool-desk.png");
 
-  await page.goto(`${BASE}/?theme=si`);
+  await page.goto(`${BASE}/?theme=phosphor`);
   await page.waitForTimeout(800);
   if (await gotIt.isVisible().catch(() => false)) await gotIt.click();
 

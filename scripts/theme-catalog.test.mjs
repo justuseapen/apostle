@@ -1,6 +1,7 @@
 /**
  * Regression: public theme catalog stays in sync across type guards,
  * ThemeSelect options, CSS blocks, and the FOUC boot script.
+ * Private customer skins must not appear in OSS.
  *
  * Run: node --test scripts/theme-catalog.test.mjs
  */
@@ -13,11 +14,10 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const themeTs = readFileSync(join(root, "src/lib/theme.tsx"), "utf8");
 const styles = readFileSync(join(root, "src/styles.css"), "utf8");
+const brand = readFileSync(join(root, "src/components/apostle/brand.tsx"), "utf8");
 const rootTsx = readFileSync(join(root, "src/routes/__root.tsx"), "utf8");
 
 const PUBLIC = ["phosphor", "ink", "eapen"];
-const PRIVATE = ["si"];
-const ALL = [...PUBLIC, ...PRIVATE];
 
 describe("theme catalog", () => {
   it("lists public themes in PUBLIC_THEMES", () => {
@@ -28,36 +28,21 @@ describe("theme catalog", () => {
     }
   });
 
-  it("accepts each theme in isProductTheme / isPublicTheme", () => {
-    for (const id of ALL) {
-      assert.match(themeTs, new RegExp(`value === "${id}"`));
-    }
+  it("accepts each public theme in isProductTheme", () => {
     for (const id of PUBLIC) {
-      assert.match(
-        themeTs,
-        new RegExp(`isPublicTheme[\\s\\S]*?value === "${id}"`),
-      );
+      assert.match(themeTs, new RegExp(`value === "${id}"`));
     }
   });
 
-  it("exposes each public theme in ThemeSelect; SI gated", () => {
+  it("exposes each public theme in ThemeSelect labels", () => {
     assert.match(themeTs, /THEME_LABELS/);
     for (const id of PUBLIC) {
       assert.match(themeTs, new RegExp(`${id}: ".*\\(public\\)"`));
     }
-    assert.match(themeTs, /showPrivateThemesInDesk/);
-    assert.match(themeTs, /VITE_APOSTLE_SHOW_PRIVATE_THEMES/);
-    assert.match(themeTs, /Super Intelligence \(private\)/);
-    assert.match(themeTs, /\[\.\.\.PUBLIC_THEMES\]/);
-    // Default Desk path must not hard-code an always-on SI <option>
-    assert.doesNotMatch(
-      themeTs,
-      /<option value="si">Super Intelligence \(private\)<\/option>/,
-    );
   });
 
-  it("has dark + light CSS token blocks per theme (except phosphor defaults)", () => {
-    for (const id of ["ink", "eapen", "si"]) {
+  it("has dark + light CSS token blocks per non-default public theme", () => {
+    for (const id of ["ink", "eapen"]) {
       assert.match(styles, new RegExp(`html\\[data-theme="${id}"\\]`));
       assert.match(
         styles,
@@ -69,7 +54,7 @@ describe("theme catalog", () => {
   it("keeps boot script allowlist in sync", () => {
     const boot = themeTs.match(/export const MODE_BOOT_SCRIPT = `([^`]+)`/);
     assert.ok(boot, "MODE_BOOT_SCRIPT missing");
-    for (const id of ALL) {
+    for (const id of PUBLIC) {
       assert.match(boot[1], new RegExp(`"${id}"`));
     }
   });
@@ -77,5 +62,16 @@ describe("theme catalog", () => {
   it("loads Eapen webfonts from Google Fonts", () => {
     assert.match(rootTsx, /family=Archivo/);
     assert.match(rootTsx, /family=Newsreader/);
+  });
+
+  it("does not ship private SI brand assets in OSS", () => {
+    assert.doesNotMatch(themeTs, /\b"si"\b/);
+    assert.doesNotMatch(themeTs, /Super Intelligence/);
+    assert.doesNotMatch(themeTs, /PRIVATE_THEMES/);
+    assert.doesNotMatch(themeTs, /isSi/);
+    assert.doesNotMatch(styles, /data-theme="si"/);
+    assert.doesNotMatch(styles, /si-pulse/);
+    assert.doesNotMatch(brand, /SiMark|SUPER INTELLIGENCE|TMTG/);
+    assert.doesNotMatch(rootTsx, /family=Poppins|family=Inter/);
   });
 });

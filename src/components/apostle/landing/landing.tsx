@@ -568,8 +568,8 @@ export function Landing() {
                 <div className="border-2 border-ph-focus bg-ph-void p-4 font-mono text-sm leading-relaxed">
                   <p className="mb-3 text-[0.7rem] tracking-[0.2em] text-ph-bone">N O W</p>
                   <p className="mb-3 text-ph-bone">
-                    Private themes without forking core. Phosphor public; Super Intelligence stays
-                    private.
+                    Public themes without forking core. Phosphor, Ink, Eapen — customer skins stay
+                    outside this repo.
                   </p>
                   <p className="mb-3 text-ph-bone">
                     Honest Hero chrome — tool cards, run layout, drawer shells — without pretending

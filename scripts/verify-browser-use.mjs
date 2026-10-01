@@ -103,7 +103,7 @@ async function main() {
     await shot(page, "browser-use-allowlist.png");
   }
 
-  await page.goto(`${BASE}/?theme=si`);
+  await page.goto(`${BASE}/?theme=phosphor`);
   await page.waitForTimeout(1000);
   await shot(page, "browser-use-si.png");
 

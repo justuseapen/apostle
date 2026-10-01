@@ -9,7 +9,7 @@ import {
   signIn,
 } from "@/lib/auth/client";
 import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
-import { ModeToggle, useProductTheme } from "@/lib/theme";
+import { ModeToggle } from "@/lib/theme";
 
 /**
  * Broker Google/X OAuth only works when the callback host is allowed
@@ -72,8 +72,6 @@ export function SignInPanel({
   const passwordOn = authEnabled && emailAndPasswordEnabled;
   const oauthOn = authEnabled && showOauth;
   const nothingOn = !passwordOn && !oauthOn;
-  const { isSi } = useProductTheme();
-
   return (
     <main className="phosphor grid min-h-dvh place-items-center bg-ph-void px-6 text-ph-bone">
       <div className="ph-scanlines pointer-events-none fixed inset-0 z-50" aria-hidden />
@@ -82,7 +80,7 @@ export function SignInPanel({
       </div>
       <div className="relative z-10 w-full max-w-sm border-2 border-ph-focus bg-ph-tile">
         <div className="border-b-2 border-ph-border px-3 py-2 font-mono text-[0.68rem] tracking-wide text-ph-dim uppercase">
-          {isSi ? "~/SUPER INTELLIGENCE — SIGN IN" : "~/APOSTLE — SIGN IN"}
+          ~/APOSTLE — SIGN IN
         </div>
         <div className="space-y-5 px-4 py-5">
           <BrandTitle />

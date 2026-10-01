@@ -1,7 +1,7 @@
 # Browser use
 
 **Status:** partial OSS ship — allowlisted Playwright + screenshot trail · desktop computer-use deferred · Firecracker still enterprise Spike · billing still out for OSS  
-**Theme:** Phosphor (public) + Super Intelligence (`?theme=si`) stay chrome-only — Browser is a plugin, not a theme.
+**Theme:** Public catalog themes stay chrome-only — Browser is a plugin, not a theme.
 
 ## What it is
 
@@ -34,7 +34,7 @@ npm run seed         # soft-enables browser for test@apostle.local
 npm run dev          # :8080
 ```
 
-1. Open `http://localhost:8080` (Phosphor) or `http://localhost:8080/?theme=si`.
+1. Open `http://localhost:8080` (Phosphor) or `http://localhost:8080/?theme=ink`.
 2. Sign in as `test@apostle.local` / `password123` (or create an account — Browser soft-enables).
 3. Desk → confirm **Browser** is `[on]` → review **Browser allowlist** (defaults include `example.com`, Wikipedia, GitHub, MDN, httpbin) → Save.
 4. Point the gateway at Ollama if you want model-driven tool calls: base `http://localhost:11434/v1`, models `qwen3:0.6b`.

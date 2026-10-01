@@ -1,7 +1,7 @@
-# Themes — add a public skin without touching SI
+# Themes — add a public skin
 
-**Audience:** someone who wants a Phosphor-compatible look for OSS, without forking the harness or cataloguing private skins.  
-**Law:** a theme is clothes, not hands. Themes never register tools. Super Intelligence (`si`) stays **private** (enable-only — not a public catalog entry). Billing stays out for OSS.
+**Audience:** someone who wants a Phosphor-compatible look for OSS, without forking the harness.  
+**Law:** a theme is clothes, not hands. Themes never register tools. **Private / customer brand skins do not live in this repository.** Billing stays out for OSS.
 
 ## Package contract
 
@@ -15,23 +15,23 @@ A public theme is:
 | Enable path | `?theme=<id>`, Desk → Theme, `localStorage`, optional `VITE_APOSTLE_THEME` / meta `apostle-default-theme` |
 
 **Allowed:** color tokens, fonts, border radius, scanline / chrome polish that still uses existing Phosphor class names (`ph-*`, `border-ph-*`, etc.).  
-**Not allowed:** tools, plugins, gateway logic, Missing seeds, private SI brand assets in OSS promo shots.
+**Not allowed:** tools, plugins, gateway logic, Missing seeds, **any private customer brand assets** (tokens, wordmarks, fonts, copy).
 
-Private themes live in `PRIVATE_THEMES` (`si` today). They are **not** listed in Desk by default.
-Enable for private pitches with `?theme=si` (still works) or build with
-`VITE_APOSTLE_SHOW_PRIVATE_THEMES=1` so Desk shows the SI option. Do **not** market SI as the
-public catalog.
+### Private customer skins
+
+Customer chrome (tokens, lockups, fonts) must stay **outside** this git tree — e.g. a gitignored `src/private/local/` overlay or a private package mounted at deploy time. Do not add private theme ids to `ProductTheme` / `PUBLIC_THEMES` in OSS. Do not commit brand-board CSS or wordmarks here.
+
+Stub contract: see [`src/private/README.md`](../src/private/README.md).
 
 ## Ritual (checklist)
 
-1. Pick a short kebab id (e.g. `ink`, `eapen`). Avoid colliding with `phosphor` or `si`.
-2. Extend `ProductTheme` / `isProductTheme` / `isPublicTheme` / boot script in `src/lib/theme.tsx` (boot script allowlist is duplicated — keep it in sync).
+1. Pick a short kebab id (e.g. `ink`, `eapen`). Avoid colliding with `phosphor`.
+2. Extend `ProductTheme` / `isProductTheme` / boot script in `src/lib/theme.tsx` (boot script allowlist is duplicated — keep it in sync).
 3. Add `html[data-theme="…"]` (+ light mode) token block in `src/styles.css` — remap the same `--color-ph-*` variables Phosphor uses.
 4. Add any new webfonts to the Google Fonts link in `src/routes/__root.tsx`.
-5. Add the id to `PUBLIC_THEMES` (or `PRIVATE_THEMES` if it must stay enable-only).
-6. Expose public ids in `ThemeSelect` (derived from `PUBLIC_THEMES`). Private skins stay off the Desk list unless `VITE_APOSTLE_SHOW_PRIVATE_THEMES=1` (or the session is already on that skin).
-7. Verify: `?theme=<id>`, Desk toggle, light/dark (`data-mode`), chat + desk + landing still readable.
-8. Document in README Docs table. Do **not** put SI chrome in OSS promo screenshots.
+5. Add the id to `PUBLIC_THEMES` (Desk `ThemeSelect` reads that list).
+6. Verify: `?theme=<id>`, Desk toggle, light/dark (`data-mode`), chat + desk + landing still readable.
+7. Document in README Docs table. Promo screenshots stay on public themes only.
 
 ## Shipping examples
 
@@ -69,8 +69,6 @@ Source map (brand → Phosphor):
 | `--red` `#762a33` | `--color-ph-missing` (light; lifted on dark) |
 | Archivo / Newsreader / IBM Plex Mono | `--font-sans` / `--font-display` / `--font-mono` |
 
-SI remains: `?theme=si` (or Desk when `VITE_APOSTLE_SHOW_PRIVATE_THEMES=1`).
-
 ## Token map (minimum)
 
 Override at least:
@@ -88,4 +86,4 @@ Keep light mode via `html[data-theme="…"][data-mode="light"]`.
 - Theme runtime: `src/lib/theme.tsx`
 - Tokens: `src/styles.css`
 - Plugins (tools, not look): [`plugins.md`](./plugins.md)
-- Enterprise matrix (SI private): [`enterprise-buyin-roadmap.md`](./enterprise-buyin-roadmap.md)
+- Enterprise capability matrix (no private chrome in-repo): [`enterprise-buyin-roadmap.md`](./enterprise-buyin-roadmap.md)

@@ -41,13 +41,15 @@ describe("theme catalog", () => {
   });
 
   it("exposes each public theme in ThemeSelect; SI gated", () => {
+    assert.match(themeTs, /THEME_LABELS/);
     for (const id of PUBLIC) {
-      assert.match(themeTs, new RegExp(`"${id}": "`));
+      assert.match(themeTs, new RegExp(`${id}: ".*\\(public\\)"`));
     }
     assert.match(themeTs, /showPrivateThemesInDesk/);
     assert.match(themeTs, /VITE_APOSTLE_SHOW_PRIVATE_THEMES/);
     assert.match(themeTs, /Super Intelligence \(private\)/);
-    // Default Desk path uses PUBLIC_THEMES only — not a hard-coded always-on SI <option>
+    assert.match(themeTs, /\[\.\.\.PUBLIC_THEMES\]/);
+    // Default Desk path must not hard-code an always-on SI <option>
     assert.doesNotMatch(
       themeTs,
       /<option value="si">Super Intelligence \(private\)<\/option>/,

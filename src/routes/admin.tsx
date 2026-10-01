@@ -252,9 +252,11 @@ function Desk() {
               <TileHead left="THEME" right="LOOK · NOT HARNESS" />
               <div className="space-y-3 px-3 py-3">
                 <p className="text-ph-dim leading-relaxed">
-                  Phosphor and Ink are public catalog themes. Super Intelligence is a private
-                  customer skin (enable-only — not a public catalog entry). Themes never register
-                  tools. See <span className="text-ph-tool">docs/themes.md</span>.
+                  Desk lists the public catalog (Phosphor, Ink, Eapen). Super Intelligence stays
+                  private: enable with <span className="text-ph-bone">?theme=si</span> or set{" "}
+                  <span className="text-ph-bone">VITE_APOSTLE_SHOW_PRIVATE_THEMES=1</span> for
+                  customer pitches — not a public catalog entry. Themes never register tools. See{" "}
+                  <span className="text-ph-tool">docs/themes.md</span>.
                 </p>
                 <ThemeSelect />
               </div>

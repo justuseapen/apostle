@@ -213,9 +213,32 @@ export function ModeToggle({ className = "" }: { className?: string }) {
   );
 }
 
-/** Desk / pitch control — public catalog first; SI stays private / enable-only. */
+/** Desk catalog control — public themes only unless private skins are opted in. */
+export function showPrivateThemesInDesk(): boolean {
+  try {
+    const flag = (import.meta as { env?: { VITE_APOSTLE_SHOW_PRIVATE_THEMES?: string } }).env
+      ?.VITE_APOSTLE_SHOW_PRIVATE_THEMES;
+    return flag === "1" || flag === "true";
+  } catch {
+    return false;
+  }
+}
+
+const THEME_LABELS: Record<ProductTheme, string> = {
+  phosphor: "Phosphor (public)",
+  ink: "Ink (public)",
+  eapen: "Eapen (public)",
+  si: "Super Intelligence (private)",
+};
+
+/** Desk / pitch control — public catalog only by default; SI via env or ?theme=si. */
 export function ThemeSelect({ className = "" }: { className?: string }) {
   const { theme, setTheme } = useProductTheme();
+  const showPrivate = showPrivateThemesInDesk() || theme === "si";
+  const options: ProductTheme[] = showPrivate
+    ? [...PUBLIC_THEMES, ...PRIVATE_THEMES]
+    : [...PUBLIC_THEMES];
+
   return (
     <label className={`flex items-center gap-2 font-mono text-xs text-ph-dim ${className}`}>
       <span className="uppercase tracking-wide">Theme</span>
@@ -228,10 +251,11 @@ export function ThemeSelect({ className = "" }: { className?: string }) {
         className="h-9 border-2 border-ph-border bg-ph-void px-2 text-ph-bone outline-none focus:border-ph-focus"
         aria-label="Product theme"
       >
-        <option value="phosphor">Phosphor (public)</option>
-        <option value="ink">Ink (public)</option>
-        <option value="eapen">Eapen (public)</option>
-        <option value="si">Super Intelligence (private)</option>
+        {options.map((id) => (
+          <option key={id} value={id}>
+            {THEME_LABELS[id]}
+          </option>
+        ))}
       </select>
     </label>
   );

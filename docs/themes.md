@@ -17,7 +17,10 @@ A public theme is:
 **Allowed:** color tokens, fonts, border radius, scanline / chrome polish that still uses existing Phosphor class names (`ph-*`, `border-ph-*`, etc.).  
 **Not allowed:** tools, plugins, gateway logic, Missing seeds, private SI brand assets in OSS promo shots.
 
-Private themes live in `PRIVATE_THEMES` (`si` today). They may appear in Desk as enable-only for private pitches; they must **not** be marketed as the public catalog.
+Private themes live in `PRIVATE_THEMES` (`si` today). They are **not** listed in Desk by default.
+Enable for private pitches with `?theme=si` (still works) or build with
+`VITE_APOSTLE_SHOW_PRIVATE_THEMES=1` so Desk shows the SI option. Do **not** market SI as the
+public catalog.
 
 ## Ritual (checklist)
 
@@ -26,7 +29,7 @@ Private themes live in `PRIVATE_THEMES` (`si` today). They may appear in Desk as
 3. Add `html[data-theme="…"]` (+ light mode) token block in `src/styles.css` — remap the same `--color-ph-*` variables Phosphor uses.
 4. Add any new webfonts to the Google Fonts link in `src/routes/__root.tsx`.
 5. Add the id to `PUBLIC_THEMES` (or `PRIVATE_THEMES` if it must stay enable-only).
-6. Expose it in `ThemeSelect` (public options first; keep SI labeled private).
+6. Expose public ids in `ThemeSelect` (derived from `PUBLIC_THEMES`). Private skins stay off the Desk list unless `VITE_APOSTLE_SHOW_PRIVATE_THEMES=1` (or the session is already on that skin).
 7. Verify: `?theme=<id>`, Desk toggle, light/dark (`data-mode`), chat + desk + landing still readable.
 8. Document in README Docs table. Do **not** put SI chrome in OSS promo screenshots.
 
@@ -66,7 +69,7 @@ Source map (brand → Phosphor):
 | `--red` `#762a33` | `--color-ph-missing` (light; lifted on dark) |
 | Archivo / Newsreader / IBM Plex Mono | `--font-sans` / `--font-display` / `--font-mono` |
 
-SI remains: `?theme=si` or Desk → Super Intelligence (private).
+SI remains: `?theme=si` (or Desk when `VITE_APOSTLE_SHOW_PRIVATE_THEMES=1`).
 
 ## Token map (minimum)
 

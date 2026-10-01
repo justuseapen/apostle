@@ -40,11 +40,18 @@ describe("theme catalog", () => {
     }
   });
 
-  it("exposes each public theme in ThemeSelect", () => {
+  it("exposes each public theme in ThemeSelect; SI gated", () => {
     for (const id of PUBLIC) {
-      assert.match(themeTs, new RegExp(`<option value="${id}">`));
+      assert.match(themeTs, new RegExp(`"${id}": "`));
     }
-    assert.match(themeTs, /<option value="si">Super Intelligence \(private\)<\/option>/);
+    assert.match(themeTs, /showPrivateThemesInDesk/);
+    assert.match(themeTs, /VITE_APOSTLE_SHOW_PRIVATE_THEMES/);
+    assert.match(themeTs, /Super Intelligence \(private\)/);
+    // Default Desk path uses PUBLIC_THEMES only — not a hard-coded always-on SI <option>
+    assert.doesNotMatch(
+      themeTs,
+      /<option value="si">Super Intelligence \(private\)<\/option>/,
+    );
   });
 
   it("has dark + light CSS token blocks per theme (except phosphor defaults)", () => {

@@ -152,6 +152,7 @@ export function stubContext(): ContextAssembler {
 export function stubWorkspace(): WorkspaceStore {
   const projects = new Map<string, Project[]>();
   const prompts = new Map<string, PromptLibraryItem[]>();
+  const threadProjects = new Map<string, string | null>(); // `${userId}:${threadId}`
   return {
     async listProjects(userId) {
       return projects.get(userId) ?? [];
@@ -160,7 +161,7 @@ export function stubWorkspace(): WorkspaceStore {
       const row: Project = {
         id: id("proj"),
         userId,
-        name,
+        name: name.trim().slice(0, 120) || "Untitled project",
         defaultModelId: null,
         createdAt: nowIso(),
       };
@@ -173,6 +174,33 @@ export function stubWorkspace(): WorkspaceStore {
       const all = prompts.get(userId) ?? [];
       if (projectId === undefined) return all;
       return all.filter((p) => p.projectId === projectId);
+    },
+    async upsertPrompt(item) {
+      const row: PromptLibraryItem = {
+        id: item.id ?? id("prm"),
+        userId: item.userId,
+        projectId: item.projectId,
+        title: item.title.trim().slice(0, 160) || "Untitled prompt",
+        body: item.body,
+      };
+      const list = prompts.get(item.userId) ?? [];
+      const idx = list.findIndex((p) => p.id === row.id);
+      if (idx >= 0) list[idx] = row;
+      else list.push(row);
+      prompts.set(item.userId, list);
+      return row;
+    },
+    async attachThread(userId, threadId, projectId) {
+      if (projectId) {
+        const owned = (projects.get(userId) ?? []).some((p) => p.id === projectId);
+        if (!owned) throw new Error("project_not_found");
+      }
+      threadProjects.set(`${userId}:${threadId}`, projectId);
+    },
+    async getThreadProjectId(userId, threadId) {
+      const key = `${userId}:${threadId}`;
+      if (!threadProjects.has(key)) return null;
+      return threadProjects.get(key) ?? null;
     },
   };
 }
@@ -314,7 +342,7 @@ export function stubTheme(): ThemePort {
 }
 
 /** Default OSS port graph — safe stubs; swap adapters privately at deploy. */
-export function createDefaultPorts(): ApostlePorts {
+export function createDefaultPorts(overrides: Partial<ApostlePorts> = {}): ApostlePorts {
   const providers = stubProviders();
   return {
     identity: stubIdentity(),
@@ -330,5 +358,6 @@ export function createDefaultPorts(): ApostlePorts {
     export: stubExport(),
     safety: stubSafety(),
     theme: stubTheme(),
+    ...overrides,
   };
 }

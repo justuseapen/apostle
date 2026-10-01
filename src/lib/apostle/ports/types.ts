@@ -119,6 +119,16 @@ export type WorkspaceStore = {
   listProjects(userId: string): Promise<Project[]>;
   createProject(userId: string, name: string): Promise<Project>;
   listPrompts(userId: string, projectId?: string | null): Promise<PromptLibraryItem[]>;
+  upsertPrompt(
+    item: Omit<PromptLibraryItem, "id"> & { id?: string },
+  ): Promise<PromptLibraryItem>;
+  /** Attach or unfile a thread. Null projectId leaves the thread unfiled (valid for legacy rows). */
+  attachThread(
+    userId: string,
+    threadId: string,
+    projectId: string | null,
+  ): Promise<void>;
+  getThreadProjectId(userId: string, threadId: string): Promise<string | null>;
 };
 
 export type MemoryScope = "global" | "project";

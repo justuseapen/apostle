@@ -29,7 +29,7 @@ ProviderAdapters (OpenAI-compatible, floor, …)
 | `GatewayPort` | Authz, route, meter, failover | Stub over provider list |
 | `ProviderAdapter` | One model backend | Stub primary + floor |
 | `ContextAssembler` | System + memory + RAG + thread window | Passthrough stub |
-| `WorkspaceStore` | Projects, prompts (threads later) | In-memory stub |
+| `WorkspaceStore` | Projects, prompts, thread↔project | SQL (`createWorkspaceStore`) + in-memory stub |
 | `MemoryPort` | Portable global/project memory | In-memory stub |
 | `CorpusRetriever` | Public-plane search only | Empty stub |
 | `AgentRuntimePort` | Missions / long tool loops | Local in-memory stub |
@@ -41,7 +41,10 @@ ProviderAdapters (OpenAI-compatible, floor, …)
 Code: `src/lib/apostle/ports/`.
 
 ```ts
-import { createDefaultPorts, getPorts } from "@/lib/apostle/ports";
+import { getPorts, installAppPorts } from "@/lib/apostle/ports";
+import { getSql } from "@/lib/db";
+
+installAppPorts(() => getSql()); // server boot — SQL workspace
 
 const ports = getPorts();
 await ports.workspace.createProject(userId, "Personal");
@@ -56,3 +59,7 @@ await ports.workspace.createProject(userId, "Personal");
 ## TrueForge
 
 TrueForge is an optional **AgentRuntimePort** implementation for missions, MCP, sandbox-as-tool, and approvals. It must not become the authn/authz edge or the workspace store. Sales / deploy language: “Apostle is the product plane; the agent engine is swappable.”
+
+## Workspace schema
+
+Migration `migrations/0009_workspace_projects.sql` adds `projects`, `project_files`, `prompt_library`, and nullable `threads.project_id` (legacy threads stay unfiled).

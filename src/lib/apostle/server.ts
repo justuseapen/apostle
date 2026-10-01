@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
+import { installAppPorts } from "@/lib/apostle/ports";
 import { authMiddleware } from "@/lib/auth/middleware";
 import {
   catalogPlugins,
@@ -17,6 +18,9 @@ import {
   type GatewayResolved,
 } from "@/lib/apostle/gateway";
 import { seedEnterpriseGaps as seedGapsRows, upsertGap } from "@/lib/apostle/gaps";
+
+/** Mount SQL-backed WorkspaceStore for all apostle server handlers. */
+installAppPorts(() => getSql());
 
 export type ThreadRow = {
   id: string;

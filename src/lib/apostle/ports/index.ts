@@ -50,4 +50,5 @@ export {
   stubWorkspace,
 } from "./stubs.ts";
 
-export { getPorts, setPortsForTests } from "./registry.ts";
+export { getPorts, installAppPorts, setPortsForTests } from "./registry.ts";
+export { createWorkspaceStore } from "./workspace-store.ts";

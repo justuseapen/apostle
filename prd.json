@@ -32,7 +32,7 @@
         "No private customer brand names in committed source or docs"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

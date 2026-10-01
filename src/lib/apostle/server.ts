@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
-import { installAppPorts } from "@/lib/apostle/ports";
+import { getPorts, installAppPorts } from "@/lib/apostle/ports";
 import { authMiddleware } from "@/lib/auth/middleware";
 import {
   catalogPlugins,
@@ -733,6 +733,62 @@ export const listComputerArtifacts = createServerFn({ method: "POST" })
       updated_at: r.updated_at,
     }));
     return { files, threadId: data.threadId };
+  });
+
+/** Portable memory — global + optional project scope (≠ corpus RAG). */
+export const listMemoryItems = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { projectId?: string | null }) => ({
+    projectId: input.projectId === undefined ? undefined : input.projectId,
+  }))
+  .handler(async ({ context, data }) => {
+    const items = await getPorts().memory.list(context.userId, data.projectId);
+    return { items };
+  });
+
+export const upsertMemoryItem = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    (input: {
+      id?: string;
+      scope: "global" | "project";
+      projectId?: string | null;
+      text: string;
+    }) => ({
+      id: input.id?.slice(0, 80),
+      scope: input.scope === "project" ? ("project" as const) : ("global" as const),
+      projectId: input.scope === "project" ? (input.projectId ?? null) : null,
+      text: (input.text ?? "").trim().slice(0, 2000),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    if (data.text.length < 1) return { ok: false as const, error: "Memory text required." };
+    try {
+      const item = await getPorts().memory.upsert({
+        id: data.id,
+        userId: context.userId,
+        scope: data.scope,
+        projectId: data.projectId,
+        text: data.text,
+      });
+      return { ok: true as const, item };
+    } catch (e) {
+      return {
+        ok: false as const,
+        error: e instanceof Error ? e.message : "Could not save memory.",
+      };
+    }
+  });
+
+export const deleteMemoryItem = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string }) => ({
+    id: String(input.id || "").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    if (!data.id) return { ok: false as const, error: "Missing id." };
+    await getPorts().memory.remove(context.userId, data.id);
+    return { ok: true as const };
   });
 
 /** Import text files from a browser folder grant into the Computer VFS. */

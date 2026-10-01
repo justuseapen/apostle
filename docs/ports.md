@@ -28,9 +28,9 @@ ProviderAdapters (OpenAI-compatible, floor, …)
 | `EntitlementsPort` | Plan gates | Open flags |
 | `GatewayPort` | Authz, route, meter, failover | Stub over provider list |
 | `ProviderAdapter` | One model backend | Stub primary + floor |
-| `ContextAssembler` | System + memory + RAG + thread window | Passthrough stub |
+| `ContextAssembler` | System + memory + RAG + thread window | `createContextAssembler` (+ stub) |
 | `WorkspaceStore` | Projects, prompts, thread↔project | SQL (`createWorkspaceStore`) + in-memory stub |
-| `MemoryPort` | Portable global/project memory | In-memory stub |
+| `MemoryPort` | Portable global/project memory | SQL (`createMemoryStore`) + stub |
 | `CorpusRetriever` | Public-plane search only | Empty stub |
 | `AgentRuntimePort` | Missions / long tool loops | Local in-memory stub |
 | `SkillsRegistry` | Workspace skill bundles | In-memory stub |
@@ -63,3 +63,7 @@ TrueForge is an optional **AgentRuntimePort** implementation for missions, MCP, 
 ## Workspace schema
 
 Migration `migrations/0009_workspace_projects.sql` adds `projects`, `project_files`, `prompt_library`, and nullable `threads.project_id` (legacy threads stay unfiled).
+
+## Memory schema
+
+Migration `migrations/0010_portable_memory.sql` adds `memory_items` (global | project). Chat Context → Memory drawer lists, adds, and deletes items.

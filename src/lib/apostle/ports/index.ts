@@ -52,3 +52,5 @@ export {
 
 export { getPorts, installAppPorts, setPortsForTests } from "./registry.ts";
 export { createWorkspaceStore } from "./workspace-store.ts";
+export { createMemoryStore } from "./memory-store.ts";
+export { createContextAssembler } from "./context-assembler.ts";

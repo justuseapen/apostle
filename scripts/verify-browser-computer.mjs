@@ -147,7 +147,7 @@ async function main() {
   await page.waitForTimeout(1200);
   await shot(page, "browser-computer-desk.png");
 
-  await page.goto(`${BASE}/?theme=si`);
+  await page.goto(`${BASE}/?theme=phosphor`);
   await page.waitForTimeout(800);
   if (await gotIt.isVisible().catch(() => false)) await gotIt.click();
 

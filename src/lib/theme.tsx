@@ -11,19 +11,17 @@ import {
 export type ColorMode = "dark" | "light";
 
 /**
- * Public themes are catalogued. Private themes (SI) are enable-only — not a public catalog entry.
+ * Public catalog themes only. Customer / private skins live outside this repo
+ * (gitignored overlay or private package) — never ship private brand assets in OSS.
  * Themes never register tools. See docs/themes.md.
  */
-export type ProductTheme = "phosphor" | "ink" | "si";
+export type ProductTheme = "phosphor" | "ink" | "eapen";
 
 export const MODE_STORAGE_KEY = "apostle-mode";
 export const THEME_STORAGE_KEY = "apostle-theme";
 
-/** Public catalog — Phosphor default + Ink (second public skin). */
-export const PUBLIC_THEMES = ["phosphor", "ink"] as const;
-
-/** Private TMTG / Super Intelligence skin — not the public Phosphor default. */
-export const PRIVATE_THEMES = ["si"] as const;
+/** Public catalog — Phosphor default + Ink + Eapen (workshop brand). */
+export const PUBLIC_THEMES = ["phosphor", "ink", "eapen"] as const;
 
 const ModeContext = createContext<{
   mode: ColorMode;
@@ -34,15 +32,14 @@ const ModeContext = createContext<{
 const ThemeContext = createContext<{
   theme: ProductTheme;
   setTheme: (theme: ProductTheme) => void;
-  isSi: boolean;
 } | null>(null);
 
 export function isProductTheme(value: string | null | undefined): value is ProductTheme {
-  return value === "phosphor" || value === "ink" || value === "si";
+  return value === "phosphor" || value === "ink" || value === "eapen";
 }
 
 export function isPublicTheme(value: string | null | undefined): boolean {
-  return value === "phosphor" || value === "ink";
+  return isProductTheme(value);
 }
 
 export function readStoredMode(): ColorMode {
@@ -106,10 +103,10 @@ function syncThemeColorMeta() {
   const theme = isProductTheme(themeAttr) ? themeAttr : "phosphor";
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
-  if (theme === "si") {
-    meta.setAttribute("content", mode === "light" ? "#ffffff" : "#07070c");
-  } else if (theme === "ink") {
+  if (theme === "ink") {
     meta.setAttribute("content", mode === "light" ? "#e8eef4" : "#0a1018");
+  } else if (theme === "eapen") {
+    meta.setAttribute("content", mode === "light" ? "#f1ece2" : "#131111");
   } else {
     meta.setAttribute("content", mode === "light" ? "#dde3ec" : "#0b0c10");
   }
@@ -119,7 +116,7 @@ function syncThemeColorMeta() {
  * FOUC-prevention snippet for `<head>` — keep in sync with applyColorMode /
  * applyProductTheme. Honors ?theme=, localStorage, then optional meta default.
  */
-export const MODE_BOOT_SCRIPT = `(function(){try{var m=localStorage.getItem(${JSON.stringify(MODE_STORAGE_KEY)});if(m!=="light"&&m!=="dark")m="dark";document.documentElement.setAttribute("data-mode",m);document.documentElement.style.colorScheme=m;var t=null;try{t=new URLSearchParams(location.search).get("theme");}catch(e){}if(t!=="phosphor"&&t!=="ink"&&t!=="si"){t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});}if(t!=="phosphor"&&t!=="ink"&&t!=="si"){var meta=document.querySelector('meta[name="apostle-default-theme"]');t=meta&&meta.getAttribute("content");}if(t!=="phosphor"&&t!=="ink"&&t!=="si")t="phosphor";document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)},t);}catch(e){}}catch(e){document.documentElement.setAttribute("data-mode","dark");document.documentElement.setAttribute("data-theme","phosphor");document.documentElement.style.colorScheme="dark";}})();`;
+export const MODE_BOOT_SCRIPT = `(function(){try{var m=localStorage.getItem(${JSON.stringify(MODE_STORAGE_KEY)});if(m!=="light"&&m!=="dark")m="dark";document.documentElement.setAttribute("data-mode",m);document.documentElement.style.colorScheme=m;var ok=function(t){return t==="phosphor"||t==="ink"||t==="eapen";};var t=null;try{t=new URLSearchParams(location.search).get("theme");}catch(e){}if(!ok(t)){t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});}if(!ok(t)){var meta=document.querySelector('meta[name="apostle-default-theme"]');t=meta&&meta.getAttribute("content");}if(!ok(t))t="phosphor";document.documentElement.setAttribute("data-theme",t);try{localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)},t);}catch(e){}}catch(e){document.documentElement.setAttribute("data-mode","dark");document.documentElement.setAttribute("data-theme","phosphor");document.documentElement.style.colorScheme="dark";}})();`;
 
 export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ColorMode>("dark");
@@ -171,10 +168,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyProductTheme(next);
   }, []);
 
-  const value = useMemo(
-    () => ({ theme, setTheme, isSi: theme === "si" }),
-    [theme, setTheme],
-  );
+  const value = useMemo(() => ({ theme, setTheme }), [theme, setTheme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
@@ -211,9 +205,16 @@ export function ModeToggle({ className = "" }: { className?: string }) {
   );
 }
 
-/** Desk / pitch control — public catalog first; SI stays private / enable-only. */
+const THEME_LABELS: Record<ProductTheme, string> = {
+  phosphor: "Phosphor (public)",
+  ink: "Ink (public)",
+  eapen: "Eapen (public)",
+};
+
+/** Desk catalog control — public themes only. */
 export function ThemeSelect({ className = "" }: { className?: string }) {
   const { theme, setTheme } = useProductTheme();
+
   return (
     <label className={`flex items-center gap-2 font-mono text-xs text-ph-dim ${className}`}>
       <span className="uppercase tracking-wide">Theme</span>
@@ -226,9 +227,11 @@ export function ThemeSelect({ className = "" }: { className?: string }) {
         className="h-9 border-2 border-ph-border bg-ph-void px-2 text-ph-bone outline-none focus:border-ph-focus"
         aria-label="Product theme"
       >
-        <option value="phosphor">Phosphor (public)</option>
-        <option value="ink">Ink (public)</option>
-        <option value="si">Super Intelligence (private)</option>
+        {PUBLIC_THEMES.map((id) => (
+          <option key={id} value={id}>
+            {THEME_LABELS[id]}
+          </option>
+        ))}
       </select>
     </label>
   );

@@ -1,6 +1,6 @@
 # Demo script (60–90s)
 
-Phosphor only. Do **not** flip to `?theme=si` for an OSS audience.
+Phosphor / public catalog only. Do **not** mount private customer chrome for an OSS audience.
 
 ## Prep (once)
 
@@ -19,7 +19,7 @@ Ollama running locally with `qwen3:0.6b` (or point Desk gateway at any OpenAI-co
 2. **Chat** — send a short hello. Show threads + streaming reply.
 3. **Computer** — `/computer` then ask to write `/hello.txt` and list the workspace (or: *Call the computer tool with action write, path /hello.txt, content hi*). Open **Artifacts** — file appears. Say out loud: browser VFS, not host FS, network default deny.
 4. **Missing** — ask for something not installed (e.g. “search my old threads”). Show Desk → Missing count / row.
-5. **Desk theme note** — open `/admin`, point at Theme: Phosphor is public; Super Intelligence is private enable-only (`?theme=si`) — do not demo SI chrome for OSS.
+5. **Desk theme note** — open `/admin`, point at Theme: Phosphor / Ink / Eapen are the public catalog; customer skins are not in this repo.
 
 Optional if time: Desk → Browser allowlist → `/browse` open `https://example.com` → Context → Browser trail. Say: allowlisted Playwright, not Firecracker, not desktop computer-use.
 

@@ -213,7 +213,7 @@ function Desk() {
             </div>
             <p className="border-t-2 border-ph-border px-3 py-2 text-[0.7rem] text-ph-dim leading-relaxed">
               {gatewayLine} Computer is browser VFS (not host FS). Browser is allowlisted Playwright
-              (not Firecracker). SI theme stays private.
+              (not Firecracker). Customer skins stay out of this repo.
             </p>
           </Tile>
 
@@ -252,9 +252,10 @@ function Desk() {
               <TileHead left="THEME" right="LOOK · NOT HARNESS" />
               <div className="space-y-3 px-3 py-3">
                 <p className="text-ph-dim leading-relaxed">
-                  Phosphor and Ink are public catalog themes. Super Intelligence is a private
-                  customer skin (enable-only — not a public catalog entry). Themes never register
-                  tools. See <span className="text-ph-tool">docs/themes.md</span>.
+                  Desk lists the public catalog (Phosphor, Ink, Eapen). Customer skins stay out of
+                  this repo — mount them via a private overlay, never commit brand assets here.
+                  Themes never register tools. See{" "}
+                  <span className="text-ph-tool">docs/themes.md</span>.
                 </p>
                 <ThemeSelect />
               </div>

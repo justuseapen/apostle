@@ -37,3 +37,6 @@ dist/
 .vercel/
 *.tsbuildinfo
 .DS_Store
+
+# Private customer theme overlays (never commit brand assets)
+src/private/local/

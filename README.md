@@ -43,7 +43,7 @@ The model sits behind one OpenAI-compatible gateway. The same slot works for Gro
 
 ## Screenshots (Phosphor)
 
-Public theme only — no Super Intelligence chrome in OSS promo shots.
+Public themes only — no private customer chrome in OSS promo shots.
 
 | Chat | Desk plugins | Computer / Artifacts |
 |------|----------------|----------------------|
@@ -59,9 +59,9 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 
 **Now**
 
-1. Private themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor stays public; Super Intelligence (`si`) is the first private customer skin (enable-only — **not** a public catalog entry). **SI stays private.**
+1. Public themes selectable without forking core (`?theme=`, desk Theme tile, optional deploy default). Phosphor / Ink / Eapen are the OSS catalog. **Customer skins stay outside this repo** (private overlay / private package).
 2. Honest Hero chrome for enterprise buy-in: tool cards, three-column run layout, artifacts / memory / knowledge / approval shells — without pretending the backends ship.
-3. **Launch ready for OSS attention.** Checklist: README polish, one-command local seed, demo path, license, screenshots, “what works / what doesn’t”, security posture for Computer/Browser, SI theme stays private. (Operator checklist may live outside this repo; this README + docs are the public bar.)
+3. **Launch ready for OSS attention.** Checklist: README polish, one-command local seed, demo path, license, screenshots, “what works / what doesn’t”, security posture for Computer/Browser, no private brand assets in-tree. (Operator checklist may live outside this repo; this README + docs are the public bar.)
 
 **Next** — the ChatGPT-shaped gaps, ordered so P0→P1 enterprise asks land first:
 
@@ -75,7 +75,7 @@ Sequenced against what a ChatGPT-shaped product needs — and against enterprise
 8. Memory. Facts about a person, separate from the corpus. (Enterprise P2.)
 9. Browser (**partial — shipping on main**). Allowlisted Playwright against Desk hosts; open/navigate/snapshot/click/type/close; screenshot trail; Desk session admin. Not desktop computer-use; Firecracker residency still Spike. (Enterprise P2.)
 10. Approvals in the protocol. A tool that needs a person pauses the run; approve once / for run / deny, all audited. (Enterprise P3 — HITL.)
-11. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / SI-Router.)
+11. Jev (or any decision model) as the router: which model, and whether a tool needs a person to approve it. (Enterprise model gateway / typed router.)
 
 **Later**
 
@@ -121,7 +121,7 @@ Open `http://localhost:8080`. Or configure DESK (`/admin`) yourself → paste ba
 
 60–90s walkthrough: [`docs/demo-script.md`](./docs/demo-script.md).
 
-Private Super Intelligence skin (does **not** change the public Phosphor default; **not** in the public catalog): open `http://localhost:8080/?theme=si`, or pick **Super Intelligence** under Desk → Theme. Reset with `?theme=phosphor`. Second public theme: `?theme=ink` (see [`docs/themes.md`](./docs/themes.md)). For a customer-only deploy, set the `<meta name="apostle-default-theme" content="si">` default (or `VITE_APOSTLE_THEME=si` at build) so Phosphor stays the open-source look everywhere else.
+Themes: `?theme=phosphor` (default), `?theme=ink` (slate/cyan), `?theme=eapen` (eapentechnology.com workshop — ink/paper/gold), or Desk → Theme. See [`docs/themes.md`](./docs/themes.md). Customer brand skins are **not** versioned here — mount via a private overlay (`src/private/local/`, gitignored).
 
 OpenRouter example: base `https://openrouter.ai/api/v1`, key from openrouter.ai/keys, model ids like `openai/gpt-4o-mini` in the model map.
 
@@ -146,12 +146,14 @@ Set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` on the host. Coo
 |---|---|
 | [`docs/plugins.md`](./docs/plugins.md) | Add a third-party-style plugin in an afternoon |
 | [`docs/plugin-catalog.md`](./docs/plugin-catalog.md) | Launch plugin list (one-liners + honesty) |
-| [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink); SI stays private |
+| [`docs/ports.md`](./docs/ports.md) | Sovereignty ports (gateway owned; TrueForge below) |
+| [`docs/v1-roadmap.md`](./docs/v1-roadmap.md) | V1 owned context plane roadmap |
+| [`docs/themes.md`](./docs/themes.md) | Public theme contract (Ink, Eapen); private skins out of repo |
 | [`docs/browser-computer-spike.md`](./docs/browser-computer-spike.md) | Computer VFS / builtins — honest limits |
 | [`docs/browser-use.md`](./docs/browser-use.md) | Allowlisted Browser + screenshot trail |
 | [`docs/coolify-selfhost.md`](./docs/coolify-selfhost.md) | Coolify / Docker node-server deploy |
 | [`docs/demo-script.md`](./docs/demo-script.md) | Short demo for OSS audiences |
-| [`docs/enterprise-buyin-roadmap.md`](./docs/enterprise-buyin-roadmap.md) | Enterprise ask matrix (SI private) |
+| [`docs/enterprise-buyin-roadmap.md`](./docs/enterprise-buyin-roadmap.md) | Enterprise ask matrix (capability; no private chrome in-repo) |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Missing + plugin/theme rituals + PR norms |
 
 Landing `#run` and `#roadmap` mirror this README.

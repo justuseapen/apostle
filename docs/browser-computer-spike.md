@@ -1,7 +1,7 @@
 # Browser Computer spike
 
 **Status:** shipped as an OSS plugin spike (honest limits) · CLI/desktop deferred · Firecracker still enterprise Spike · billing still out for OSS  
-**Theme:** Phosphor (public) + Super Intelligence (`?theme=si`) stay chrome-only — Computer is a plugin, not a theme.
+**Theme:** Public catalog themes stay chrome-only — Computer is a plugin, not a theme.
 
 ## What it is
 
@@ -33,7 +33,7 @@ Artifacts (Context → Artifacts) lists the thread’s workspace files, with:
 npm run dev   # if not already up
 ```
 
-1. Open `http://localhost:8080` (Phosphor) or `http://localhost:8080/?theme=si`.
+1. Open `http://localhost:8080` (Phosphor) or `http://localhost:8080/?theme=ink`.
 2. Sign in → Desk → confirm **Computer** is `[on]` under Plugins → Save if needed.
 3. Point the gateway at Ollama if you want tool calls: base `http://localhost:11434/v1`, models `qwen3:0.6b`.
 4. In chat, try:

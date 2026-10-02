@@ -7,7 +7,8 @@ Apostle is an open-source harness to install your own AI assistant: **themes** c
 1. **File a Missing ask** from chat (`create_missing` / Desk → Missing) when something ChatGPT-shaped is absent. Prefer real product gaps over meta checklist items.
 2. **Open a PR** against `main` for plugins, docs, or harness fixes. Keep plugins in `src/lib/apostle/plugins/` — do not edit the chat harness to hard-code tools.
 3. Match the frozen plugin contract: declare `needs.network`, secrets, and approvals. Default is deny.
-4. Stay honest in copy: Computer and Browser are **partial / spike**, not “done.” Super Intelligence (`si`) is a **private** skin — not a public catalog theme. Billing / Stripe stays **out for OSS**.
+4. Stay honest in copy: Computer and Browser are **partial / spike**, not “done.” Private customer brand skins stay **out of this repository**. Billing / Stripe stays **out for OSS**.
+5. **Private enterprise adapters** (customer SSO, corpus, brand chrome, plan SKUs) stay **out of this repository** — see [`docs/ports.md`](./docs/ports.md).
 
 ## Add a plugin (afternoon ritual)
 
@@ -21,7 +22,7 @@ Follow [`docs/plugins.md`](./docs/plugins.md). Short checklist:
 
 ## Add a public theme
 
-Follow [`docs/themes.md`](./docs/themes.md). Remap `--color-ph-*` under `html[data-theme="…"]`. Phosphor + Ink are public; **SI stays private / enable-only**.
+Follow [`docs/themes.md`](./docs/themes.md). Remap `--color-ph-*` under `html[data-theme="…"]`. Ship only public catalog themes in this repo.
 
 ## Local loop
 
@@ -38,7 +39,7 @@ Sign in as `test@apostle.local` / `password123`. Disable auto-seed with `APOSTLE
 
 - [README](./README.md) — product story, roadmap, run path
 - [Plugins](./docs/plugins.md) — author path + checklist
-- [Themes](./docs/themes.md) — public theme contract (SI private)
+- [Themes](./docs/themes.md) — public theme contract (private skins out of repo)
 - [Computer spike](./docs/browser-computer-spike.md) — VFS limits
 - [Browser use](./docs/browser-use.md) — allowlist + screenshot trail
 - [Demo script](./docs/demo-script.md) — 60–90s walkthrough

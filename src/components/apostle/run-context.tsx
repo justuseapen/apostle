@@ -9,11 +9,14 @@ import {
 } from "@/lib/apostle/computer/browser-fs.ts";
 import {
   closeBrowserSession,
+  deleteMemoryItem,
   getBrowserSession,
   importComputerFiles,
   listBrowserTrail,
   listComputerArtifacts,
+  listMemoryItems,
   readComputerFile,
+  upsertMemoryItem,
   type BrowserTrailItem,
   type ComputerArtifact,
 } from "@/lib/apostle/server";
@@ -95,16 +98,7 @@ export function RunContextPanel({
         {open === "browser" && (
           <BrowserTrailDrawer threadId={threadId} tick={artifactsTick} />
         )}
-        {open === "memory" && (
-          <PanelBlock title="Memory" hint="Per-user · revocable · ≠ RAG">
-            <p className="text-ph-dim leading-relaxed">
-              Drawer shell only. Memories will be listed, editable, and deletable here.
-            </p>
-            <ul className="mt-3 space-y-2 text-ph-dim">
-              <li className="border-2 border-ph-border px-2 py-2">— empty —</li>
-            </ul>
-          </PanelBlock>
-        )}
+        {open === "memory" && <MemoryDrawer />}
         {open === "knowledge" && (
           <PanelBlock title="Knowledge" hint="RAG + citations · separate from Memory">
             <p className="text-ph-dim leading-relaxed">
@@ -120,6 +114,121 @@ export function RunContextPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function MemoryDrawer() {
+  const [items, setItems] = useState<
+    { id: string; scope: string; text: string; updatedAt: string }[]
+  >([]);
+  const [draft, setDraft] = useState("");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await listMemoryItems({ data: {} });
+      setItems(
+        res.items.map((m) => ({
+          id: m.id,
+          scope: m.scope,
+          text: m.text,
+          updatedAt: m.updatedAt,
+        })),
+      );
+    } catch {
+      setStatus("Could not load memory.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  async function onAdd() {
+    const text = draft.trim();
+    if (!text) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      const res = await upsertMemoryItem({
+        data: { scope: "global", text },
+      });
+      if (!res.ok) {
+        setStatus(res.error);
+        return;
+      }
+      setDraft("");
+      await refresh();
+    } catch {
+      setStatus("Save failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDelete(id: string) {
+    setBusy(true);
+    try {
+      await deleteMemoryItem({ data: { id } });
+      await refresh();
+    } catch {
+      setStatus("Delete failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <PanelBlock title="Memory" hint="Per-user · revocable · ≠ RAG">
+      <p className="text-ph-dim leading-relaxed">
+        Everything Apostle remembers about you, in plain language. Edit or delete any line — it
+        travels across models.
+      </p>
+      <div className="mt-3 flex flex-col gap-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={3}
+          placeholder="Add a memory…"
+          className="w-full border-2 border-ph-border bg-ph-tile px-2 py-1.5 text-ph-bone outline-none focus:border-ph-focus"
+        />
+        <button
+          type="button"
+          disabled={busy || !draft.trim()}
+          onClick={() => void onAdd()}
+          className="self-start border-2 border-ph-focus px-2 py-1 text-[0.65rem] tracking-wide text-ph-focus uppercase hover:bg-ph-focus hover:text-ph-on disabled:opacity-40"
+        >
+          Add global
+        </button>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {items.length === 0 ? (
+          <li className="border-2 border-ph-border px-2 py-2 text-ph-dim">— empty —</li>
+        ) : (
+          items.map((m) => (
+            <li
+              key={m.id}
+              className="flex items-start justify-between gap-2 border-2 border-ph-border px-2 py-2"
+            >
+              <div className="min-w-0">
+                <p className="text-[0.6rem] tracking-wide text-ph-dim uppercase">{m.scope}</p>
+                <p className="text-ph-bone leading-relaxed whitespace-pre-wrap">{m.text}</p>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onDelete(m.id)}
+                className="shrink-0 border-2 border-ph-border px-1.5 py-0.5 text-[0.6rem] tracking-wide text-ph-dim uppercase hover:border-ph-missing hover:text-ph-missing"
+              >
+                Del
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
+      {status ? <p className="mt-2 text-[0.65rem] text-ph-warn">{status}</p> : null}
+    </PanelBlock>
   );
 }
 

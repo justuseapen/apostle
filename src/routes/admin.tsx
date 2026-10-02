@@ -6,6 +6,7 @@ import { Shell } from "@/components/apostle/shell";
 import { allowlistToLines } from "@/lib/apostle/browser/allowlist.ts";
 import {
   closeBrowserSession,
+  exportUserArchive,
   getDesk,
   listBrowserSessions,
   listGaps,
@@ -30,7 +31,8 @@ type DeskSection =
   | "threads"
   | "missing"
   | "usage"
-  | "theme";
+  | "theme"
+  | "vault";
 
 type GatewayInfo = {
   live: boolean;
@@ -48,6 +50,7 @@ const NAV: { id: DeskSection; label: string }[] = [
   { id: "missing", label: "Missing" },
   { id: "usage", label: "Usage" },
   { id: "theme", label: "Theme" },
+  { id: "vault", label: "Vault" },
 ];
 
 function Desk() {
@@ -72,6 +75,7 @@ function Desk() {
   const [gaps, setGaps] = useState<GapRow[]>([]);
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [sessions, setSessions] = useState<{ threadId: string; url: string; title: string }[]>([]);
+  const [vaultBusy, setVaultBusy] = useState(false);
 
   const allowlistCount = useMemo(
     () => allowlistText.split(/[\n,]+/).map((h) => h.trim()).filter(Boolean).length,
@@ -258,6 +262,53 @@ function Desk() {
                   <span className="text-ph-tool">docs/themes.md</span>.
                 </p>
                 <ThemeSelect />
+              </div>
+            </Tile>
+          )}
+
+          {section === "vault" && (
+            <Tile>
+              <TileHead left="VAULT" right="EXPORT SCHEMA V1" />
+              <div className="space-y-3 px-3 py-3">
+                <p className="text-ph-dim leading-relaxed">
+                  One-click archive of projects, threads, messages, memory, prompts, skills, and file
+                  metadata. Agent runtimes (including optional TrueForge) sit below the gateway —
+                  this export is the product-plane snapshot. See{" "}
+                  <span className="text-ph-tool">docs/export-schema-v1.md</span>.
+                </p>
+                <PhButton
+                  tone="focus"
+                  disabled={vaultBusy}
+                  onClick={() => {
+                    void (async () => {
+                      setVaultBusy(true);
+                      setNote("");
+                      try {
+                        const res = await exportUserArchive();
+                        if (!res.ok) {
+                          setNote(res.error);
+                          return;
+                        }
+                        const blob = new Blob([JSON.stringify(res.archive, null, 2)], {
+                          type: "application/json",
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `apostle-export-v1-${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        setNote("Vault archive downloaded.");
+                      } catch {
+                        setNote("Export failed.");
+                      } finally {
+                        setVaultBusy(false);
+                      }
+                    })();
+                  }}
+                >
+                  {vaultBusy ? "Building…" : "Download archive"}
+                </PhButton>
               </div>
             </Tile>
           )}

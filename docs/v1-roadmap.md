@@ -1,7 +1,7 @@
 # Apostle V1 — owned context plane roadmap
 
 **Status:** active  
-**Branch:** `cursor/v1-sovereignty-ports-545f`  
+**Branch:** `cursor/v1-prototype-primitives-545f`  
 **North star:** Self-hostable product plane (identity, workspace, memory, gateway, export, Desk, themes) with a replaceable agent runtime underneath (TrueForge by default for missions/tools). Enterprise customers plug in via **private adapters** — never committed to this repository.
 
 ## Law

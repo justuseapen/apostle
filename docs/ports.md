@@ -67,3 +67,15 @@ Migration `migrations/0009_workspace_projects.sql` adds `projects`, `project_fil
 ## Memory schema
 
 Migration `migrations/0010_portable_memory.sql` adds `memory_items` (global | project). Chat Context → Memory drawer lists, adds, and deletes items.
+
+## Model switch + failover
+
+Migration `migrations/0011_thread_preferred_model.sql` adds `threads.preferred_model_id`. Chat model picker sets the thread default; history is unchanged. `resolveModelChain` / `pickFailoverResult` (`model-routing.ts`) try preferred → router map → floor (`APOSTLE_FLOOR_MODEL` or cheap/default). Failover writes `meta.failoverNotice`.
+
+## Missions + skills
+
+Migration `migrations/0012_missions_and_skills.sql`. Local `AgentRuntimePort` completes missions in-process; optional TrueForge via `TRUEFORGE_BASE_URL` (+ `TRUEFORGE_API_KEY`). Skills are workspace instruction bundles (`SkillsRegistry`) — distinct from harness Plugins. See [`export-schema-v1.md`](./export-schema-v1.md).
+
+## Export / Vault
+
+`ExportPort` / `createExportStore` builds schema v1 JSON. Context → Vault downloads `apostle-export-v1-*.json`.

@@ -189,6 +189,12 @@ export type AgentRuntimePort = {
     brief: string;
   }): Promise<Mission>;
   getMission(userId: string, id: string): Promise<Mission | null>;
+  /** Mark a mission finished. Local runtime uses this; TrueForge may sync status. */
+  completeMission(
+    userId: string,
+    id: string,
+    status?: Extract<MissionStatus, "completed" | "failed">,
+  ): Promise<Mission | null>;
 };
 
 export type Skill = {
@@ -206,12 +212,66 @@ export type SkillsRegistry = {
   remove(userId: string, id: string): Promise<void>;
 };
 
+export type ExportArchivePayload = {
+  projects: Array<{
+    id: string;
+    name: string;
+    defaultModelId: string | null;
+    createdAt: string;
+  }>;
+  threads: Array<{
+    id: string;
+    title: string;
+    projectId: string | null;
+    preferredModelId?: string | null;
+    createdAt: string;
+  }>;
+  messages: Array<{
+    id: string;
+    threadId: string;
+    role: string;
+    content: string;
+    meta: string | null;
+    createdAt: string;
+  }>;
+  memory: Array<{
+    id: string;
+    projectId: string | null;
+    scope: string;
+    text: string;
+    updatedAt: string;
+  }>;
+  prompts: Array<{
+    id: string;
+    projectId: string | null;
+    title: string;
+    body: string;
+    createdAt: string;
+  }>;
+  skills: Array<{
+    id: string;
+    projectId: string | null;
+    name: string;
+    description: string;
+    instructions: string;
+  }>;
+  files: Array<{
+    id: string;
+    projectId: string;
+    name: string;
+    mime: string | null;
+    sizeBytes: number;
+    storageKey: string;
+    createdAt: string;
+  }>;
+};
+
 export type ExportArchive = {
   schemaVersion: "1";
   createdAt: string;
   userId: string;
-  /** Opaque payload; real impl produces files + JSON. */
-  payload: Record<string, unknown>;
+  /** Open schema v1 collections — see docs/export-schema-v1.md. */
+  payload: ExportArchivePayload;
 };
 
 export type ExportPort = {

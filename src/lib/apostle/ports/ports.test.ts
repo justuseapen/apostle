@@ -66,7 +66,8 @@ describe("apostle ports", () => {
       title: "Research",
       brief: "Summarize docs",
     });
-    assert.equal(m.status, "queued");
+    // Local in-process runtime completes without an external harness.
+    assert.equal(m.status, "completed");
     assert.equal((await p.agentRuntime.getMission("u1", m.id))?.id, m.id);
   });
 

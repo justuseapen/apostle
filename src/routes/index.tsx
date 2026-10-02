@@ -9,7 +9,7 @@ import { SlashMenu } from "@/components/apostle/slash-menu";
 import { ApprovalCard, ToolCard } from "@/components/apostle/tool-card";
 import { openOnboarding } from "@/components/apostle/onboarding";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { listMessages, listThreads, sendMessage, importComputerFiles, renameThread, deleteThread, reorderThreads, searchThreads, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
+import { listMessages, listThreads, sendMessage, importComputerFiles, renameThread, deleteThread, reorderThreads, searchThreads, setThreadPreferredModel, getDesk, type MessageRow, type ThreadRow } from "@/lib/apostle/server";
 import {
   filterSlashSkills,
   listSlashSkills,
@@ -20,7 +20,13 @@ import {
 export const Route = createFileRoute("/")({ component: Home });
 
 type Trace = { name: string; args?: string; result: string };
-type Meta = { label?: string; reason?: string; model?: string; tools?: Trace[] };
+type Meta = {
+  label?: string;
+  reason?: string;
+  model?: string;
+  failoverNotice?: string | null;
+  tools?: Trace[];
+};
 
 function readMeta(raw: string | null): Meta {
   if (!raw) return {};
@@ -60,6 +66,8 @@ function Chat() {
   );
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [preferredModel, setPreferredModel] = useState<string>("");
   const scroller = useRef<HTMLDivElement>(null);
   const allSkills = useMemo(() => listSlashSkills(), []);
 
@@ -97,10 +105,22 @@ function Chat() {
       .then((rows) => {
         if (rows[0]) {
           setActive(rows[0].id);
+          setPreferredModel(rows[0].preferred_model_id ?? "");
           return listMessages({ data: rows[0].id }).then(setMessages);
         }
       })
       .catch(() => setError("Could not load your threads."));
+    getDesk()
+      .then((desk) => {
+        try {
+          const map = JSON.parse(desk.settings.model_map) as Record<string, string>;
+          const uniq = [...new Set(Object.values(map).filter(Boolean))];
+          setModelOptions(uniq);
+        } catch {
+          setModelOptions([]);
+        }
+      })
+      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -164,6 +184,8 @@ function Chat() {
     setActive(id);
     setOpenList(false);
     setMessages(await listMessages({ data: id }));
+    const row = threads.find((t) => t.id === id);
+    setPreferredModel(row?.preferred_model_id ?? "");
   }
 
   function fresh() {
@@ -173,6 +195,24 @@ function Chat() {
     setError("");
     setLogged("");
     setShowApprovalDemo(false);
+    setPreferredModel("");
+  }
+
+  async function onPreferredModelChange(next: string) {
+    setPreferredModel(next);
+    if (!active) return;
+    try {
+      await setThreadPreferredModel({
+        data: { threadId: active, modelId: next || null },
+      });
+      setThreads((rows) =>
+        rows.map((t) =>
+          t.id === active ? { ...t, preferred_model_id: next || null } : t,
+        ),
+      );
+    } catch {
+      setError("Could not save model preference.");
+    }
   }
 
   async function onSearchThreads(q: string) {
@@ -278,7 +318,13 @@ function Chat() {
     };
     setMessages((m) => [...m, optimistic]);
     try {
-      const result = await sendMessage({ data: { threadId: active, text } });
+      const result = await sendMessage({
+        data: {
+          threadId: active,
+          text,
+          modelId: preferredModel || null,
+        },
+      });
       if (!result.ok) {
         setError(result.error);
         setMessages((m) => m.filter((x) => x.id !== "pending-user"));
@@ -445,6 +491,11 @@ function Chat() {
                         {meta.label} · {meta.model}
                       </p>
                     )}
+                    {!mine && meta.failoverNotice && (
+                      <p className="mb-1 border-2 border-ph-warn bg-ph-tile px-2 py-1 text-[0.7rem] text-ph-warn">
+                        {meta.failoverNotice}
+                      </p>
+                    )}
                     {meta.tools?.map((tool, i) => (
                       <ToolCard key={`${m.id}-t-${i}`} tool={tool} />
                     ))}
@@ -500,6 +551,28 @@ function Chat() {
                 onActiveIndex={setSlashIndex}
                 onSelect={applySkill}
               />
+              <div className="mb-2 flex items-center gap-2">
+                <label
+                  htmlFor="thread-model"
+                  className="font-mono text-[0.65rem] tracking-wide text-ph-dim uppercase"
+                >
+                  Model
+                </label>
+                <select
+                  id="thread-model"
+                  value={preferredModel}
+                  onChange={(e) => void onPreferredModelChange(e.target.value)}
+                  className="h-8 flex-1 border-2 border-ph-border bg-ph-tile px-2 font-mono text-xs text-ph-bone outline-none focus:border-ph-focus"
+                  aria-label="Thread model"
+                >
+                  <option value="">Auto (router)</option>
+                  {modelOptions.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2">
                 <PhInput
                   value={draft}

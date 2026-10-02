@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { getPorts, installAppPorts } from "@/lib/apostle/ports";
+import {
+  pickFailoverResult,
+  resolveFloorModelId,
+  resolveModelChain,
+} from "@/lib/apostle/ports/model-routing";
 import { authMiddleware } from "@/lib/auth/middleware";
 import {
   catalogPlugins,
@@ -28,6 +33,7 @@ export type ThreadRow = {
   created_at: string;
   updated_at?: string;
   sort_order?: number;
+  preferred_model_id?: string | null;
 };
 export type MessageRow = {
   id: string;
@@ -191,10 +197,31 @@ export const listThreads = createServerFn({ method: "GET" })
     return sql<ThreadRow>`
       select id, title, created_at::text as created_at,
              coalesce(updated_at, created_at)::text as updated_at,
-             coalesce(sort_order, 0)::int as sort_order
+             coalesce(sort_order, 0)::int as sort_order,
+             preferred_model_id
       from threads where user_id = ${context.userId}
       order by coalesce(sort_order, 0) asc, coalesce(updated_at, created_at) desc
     `;
+  });
+
+/** Persist mid-thread model preference without rewriting history. */
+export const setThreadPreferredModel = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { threadId: string; modelId: string | null }) => ({
+    threadId: (input.threadId || "").slice(0, 80),
+    modelId: input.modelId === null || input.modelId === "" ? null : input.modelId.trim().slice(0, 120),
+  }))
+  .handler(async ({ context, data }) => {
+    if (!data.threadId) return { ok: false as const, error: "thread_required" };
+    const sql = await getSql();
+    const rows = await sql<{ id: string; preferred_model_id: string | null }>`
+      update threads
+      set preferred_model_id = ${data.modelId}, updated_at = now()
+      where id = ${data.threadId} and user_id = ${context.userId}
+      returning id, preferred_model_id
+    `;
+    if (!rows[0]) return { ok: false as const, error: "thread_not_found" };
+    return { ok: true as const, preferredModelId: rows[0].preferred_model_id };
   });
 
 /** Create an empty chat thread (verify scripts / UI helpers). */
@@ -432,9 +459,15 @@ type ChatMsg = {
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator((input: { threadId: string | null; text: string }) => ({
+  .validator((input: { threadId: string | null; text: string; modelId?: string | null }) => ({
     threadId: input.threadId,
     text: input.text.trim().slice(0, 8000),
+    modelId:
+      input.modelId === undefined
+        ? undefined
+        : input.modelId === null || input.modelId === ""
+          ? null
+          : input.modelId.trim().slice(0, 120),
   }))
   .handler(async ({ context, data }) => {
     if (!data.text) return { ok: false as const, error: "Write something first." };
@@ -463,18 +496,29 @@ export const sendMessage = createServerFn({ method: "POST" })
     }
 
     let threadId = data.threadId;
+    let preferredModelId: string | null = null;
     if (threadId) {
-      const owned = await sql<{ id: string }>`
-        select id from threads where id = ${threadId} and user_id = ${context.userId}
+      const owned = await sql<{ id: string; preferred_model_id: string | null }>`
+        select id, preferred_model_id from threads
+        where id = ${threadId} and user_id = ${context.userId}
       `;
       if (!owned[0]) threadId = null;
+      else preferredModelId = owned[0].preferred_model_id;
     }
     if (!threadId) {
       threadId = crypto.randomUUID();
       const title = data.text.slice(0, 72);
       await sql`
-        insert into threads (id, user_id, title, sort_order, updated_at)
-        values (${threadId}, ${context.userId}, ${title}, 0, now())
+        insert into threads (id, user_id, title, sort_order, updated_at, preferred_model_id)
+        values (${threadId}, ${context.userId}, ${title}, 0, now(), ${data.modelId ?? null})
+      `;
+      preferredModelId = data.modelId ?? null;
+    } else if (data.modelId !== undefined) {
+      preferredModelId = data.modelId;
+      await sql`
+        update threads
+        set preferred_model_id = ${preferredModelId}, updated_at = now()
+        where id = ${threadId} and user_id = ${context.userId}
       `;
     }
 
@@ -497,11 +541,20 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     const decision = routeLabel(data.text);
     const map = parseMap(settings.model_map);
-    const model = map[decision.label] || "grok-4.5";
+    const routerModel = map[decision.label] || "grok-4.5";
+    const floorModel = resolveFloorModelId({
+      envFloor: process.env.APOSTLE_FLOOR_MODEL,
+      fallback: map.cheap || map.default || "grok-4.5",
+    });
+    const modelChain = resolveModelChain({
+      preferredModelId,
+      routerModelId: routerModel,
+      floorModelId: floorModel,
+    });
     const enabled = parseList(settings.plugins);
     const tools = toolsFor(enabled);
 
-    const messages: ChatMsg[] = [
+    const baseMessages: ChatMsg[] = [
       {
         role: "system",
         content: settings.system_prompt?.trim() || DEFAULT_PROMPT,
@@ -515,59 +568,89 @@ export const sendMessage = createServerFn({ method: "POST" })
     let tokensIn = 0;
     let tokensOut = 0;
     let answer = "";
+    let usedModel = modelChain[0]!;
+    let failoverNotice: string | null = null;
 
-    for (let round = 0; round < 3; round++) {
-      const res = await chatCompletions(gateway, {
-        model,
-        messages,
-        tools: tools.length ? tools : undefined,
-        max_tokens: BUDGET[decision.label],
-        temperature: 0.4,
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        return { ok: false as const, error: `Gateway ${res.status}: ${errText.slice(0, 180)}`, threadId };
-      }
-      const body = (await res.json()) as {
-        usage?: { prompt_tokens?: number; completion_tokens?: number };
-        choices?: {
-          message?: {
-            content?: string | null;
-            tool_calls?: { id: string; function: { name: string; arguments: string } }[];
+    try {
+      const picked = await pickFailoverResult(modelChain, async (model) => {
+        const messages = structuredClone(baseMessages) as ChatMsg[];
+        const roundTraces: ToolTrace[] = [];
+        let roundIn = 0;
+        let roundOut = 0;
+        let roundAnswer = "";
+
+        for (let round = 0; round < 3; round++) {
+          const res = await chatCompletions(gateway, {
+            model,
+            messages,
+            tools: tools.length ? tools : undefined,
+            max_tokens: BUDGET[decision.label],
+            temperature: 0.4,
+          });
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Gateway ${res.status}: ${errText.slice(0, 180)}`);
+          }
+          const body = (await res.json()) as {
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+            choices?: {
+              message?: {
+                content?: string | null;
+                tool_calls?: { id: string; function: { name: string; arguments: string } }[];
+              };
+            }[];
           };
-        }[];
-      };
-      tokensIn += body.usage?.prompt_tokens ?? 0;
-      tokensOut += body.usage?.completion_tokens ?? 0;
-      const msg = body.choices?.[0]?.message;
-      const calls = msg?.tool_calls ?? [];
-      if (!calls.length) {
-        answer = msg?.content?.trim() || "I didn't get a reply.";
-        break;
-      }
-      messages.push({
-        role: "assistant",
-        content: msg?.content || "",
-        tool_calls: calls,
+          roundIn += body.usage?.prompt_tokens ?? 0;
+          roundOut += body.usage?.completion_tokens ?? 0;
+          const msg = body.choices?.[0]?.message;
+          const calls = msg?.tool_calls ?? [];
+          if (!calls.length) {
+            roundAnswer = msg?.content?.trim() || "I didn't get a reply.";
+            break;
+          }
+          messages.push({
+            role: "assistant",
+            content: msg?.content || "",
+            tool_calls: calls,
+          });
+          for (const call of calls) {
+            const result = await runPluginTool(call.function.name, call.function.arguments, {
+              userId: context.userId,
+              threadId: threadId ?? undefined,
+            });
+            roundTraces.push({ name: call.function.name, args: call.function.arguments, result });
+            messages.push({
+              role: "tool",
+              tool_call_id: call.id,
+              content: result,
+            });
+          }
+        }
+
+        return {
+          answer: roundAnswer || "I didn't get a reply.",
+          traces: roundTraces,
+          tokensIn: roundIn,
+          tokensOut: roundOut,
+        };
       });
-      for (const call of calls) {
-        const result = await runPluginTool(call.function.name, call.function.arguments, {
-          userId: context.userId,
-          threadId: threadId ?? undefined,
-        });
-        traces.push({ name: call.function.name, args: call.function.arguments, result });
-        messages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: result,
-        });
-      }
+
+      usedModel = picked.modelId;
+      failoverNotice = picked.failoverNotice;
+      answer = picked.result.answer;
+      traces.push(...picked.result.traces);
+      tokensIn = picked.result.tokensIn;
+      tokensOut = picked.result.tokensOut;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Model request failed.";
+      return { ok: false as const, error: message, threadId };
     }
 
     const meta = JSON.stringify({
       label: decision.label,
       reason: decision.reason,
-      model,
+      model: usedModel,
+      failoverNotice,
       tools: traces,
     });
     const assistantId = crypto.randomUUID();
@@ -577,12 +660,12 @@ export const sendMessage = createServerFn({ method: "POST" })
     `;
     await sql`
       insert into usage_events (id, user_id, thread_id, model, label, tokens_in, tokens_out)
-      values (${crypto.randomUUID()}, ${context.userId}, ${threadId}, ${model}, ${decision.label}, ${tokensIn}, ${tokensOut})
+      values (${crypto.randomUUID()}, ${context.userId}, ${threadId}, ${usedModel}, ${decision.label}, ${tokensIn}, ${tokensOut})
     `;
 
     const gap = await noteGap(
       gateway,
-      model,
+      usedModel,
       context.userId,
       data.text,
       answer,
@@ -593,6 +676,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       ok: true as const,
       threadId,
       gap,
+      failoverNotice,
       message: {
         id: assistantId,
         role: "assistant",
@@ -789,6 +873,117 @@ export const deleteMemoryItem = createServerFn({ method: "POST" })
     if (!data.id) return { ok: false as const, error: "Missing id." };
     await getPorts().memory.remove(context.userId, data.id);
     return { ok: true as const };
+  });
+
+/** Vault — open schema v1 archive for the signed-in user. */
+export const exportUserArchive = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const entitlements = await getPorts().entitlements.forUser(context.userId);
+    if (!entitlements.exportEnabled) {
+      return { ok: false as const, error: "Export is disabled for this plan." };
+    }
+    const archive = await getPorts().export.buildArchive(context.userId);
+    return { ok: true as const, archive };
+  });
+
+/** Workspace skills (≠ harness plugins). */
+export const listSkills = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { projectId?: string | null } = {}) => ({
+    projectId: input.projectId === undefined ? undefined : input.projectId,
+  }))
+  .handler(async ({ context, data }) => {
+    const items = await getPorts().skills.list(context.userId, data.projectId);
+    return { items };
+  });
+
+export const upsertSkill = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    (input: {
+      id?: string;
+      projectId?: string | null;
+      name: string;
+      description?: string;
+      instructions: string;
+    }) => ({
+      id: input.id?.slice(0, 80),
+      projectId: input.projectId ?? null,
+      name: (input.name ?? "").trim().slice(0, 120),
+      description: (input.description ?? "").trim().slice(0, 400),
+      instructions: (input.instructions ?? "").trim().slice(0, 8000),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    if (!data.name) return { ok: false as const, error: "Name required." };
+    if (!data.instructions) return { ok: false as const, error: "Instructions required." };
+    try {
+      const skill = await getPorts().skills.upsert({
+        id: data.id,
+        userId: context.userId,
+        projectId: data.projectId,
+        name: data.name,
+        description: data.description,
+        instructions: data.instructions,
+      });
+      return { ok: true as const, skill };
+    } catch (e) {
+      return {
+        ok: false as const,
+        error: e instanceof Error ? e.message : "Could not save skill.",
+      };
+    }
+  });
+
+export const deleteSkill = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string }) => ({
+    id: String(input.id || "").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    if (!data.id) return { ok: false as const, error: "Missing id." };
+    await getPorts().skills.remove(context.userId, data.id);
+    return { ok: true as const };
+  });
+
+/** Missions via AgentRuntimePort (local completes in-process; TrueForge optional). */
+export const enqueueMission = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    (input: {
+      title: string;
+      brief: string;
+      projectId?: string | null;
+      threadId?: string | null;
+    }) => ({
+      title: (input.title ?? "").trim().slice(0, 160),
+      brief: (input.brief ?? "").trim().slice(0, 8000),
+      projectId: input.projectId ?? null,
+      threadId: input.threadId ?? null,
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    if (!data.title) return { ok: false as const, error: "Title required." };
+    const mission = await getPorts().agentRuntime.enqueueMission({
+      userId: context.userId,
+      projectId: data.projectId,
+      threadId: data.threadId,
+      title: data.title,
+      brief: data.brief || data.title,
+    });
+    return { ok: true as const, mission };
+  });
+
+export const getMission = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { id: string }) => ({
+    id: String(input.id || "").slice(0, 80),
+  }))
+  .handler(async ({ context, data }) => {
+    if (!data.id) return { ok: false as const, error: "Missing id." };
+    const mission = await getPorts().agentRuntime.getMission(context.userId, data.id);
+    return { ok: true as const, mission };
   });
 
 /** Import text files from a browser folder grant into the Computer VFS. */

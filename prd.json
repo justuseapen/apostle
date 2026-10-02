@@ -1,6 +1,6 @@
 {
   "project": "Apostle",
-  "branchName": "cursor/v1-sovereignty-ports-545f",
+  "branchName": "cursor/v1-prototype-primitives-545f",
   "description": "V1 owned context plane \u2014 gateway + workspace/memory/export ports, replaceable AgentRuntime (TrueForge below the line), self-host product with private enterprise adapters out of tree.",
   "userStories": [
     {
@@ -63,7 +63,7 @@
         "No private customer brand names in committed source or docs"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -78,7 +78,7 @@
         "No private customer brand names in committed source or docs"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -93,7 +93,7 @@
         "No private customer brand names in committed source or docs"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -108,7 +108,7 @@
         "No private customer brand names in committed source or docs"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

@@ -10,6 +10,7 @@ import {
 import {
   closeBrowserSession,
   deleteMemoryItem,
+  exportUserArchive,
   getBrowserSession,
   importComputerFiles,
   listBrowserTrail,
@@ -21,7 +22,7 @@ import {
   type ComputerArtifact,
 } from "@/lib/apostle/server";
 
-type DrawerId = "artifacts" | "browser" | "memory" | "knowledge" | "run";
+type DrawerId = "artifacts" | "browser" | "memory" | "knowledge" | "run" | "vault";
 
 /**
  * Right-hand run context column — Hero UI fiction → real chrome stubs.
@@ -55,6 +56,7 @@ export function RunContextPanel({
             ["browser", "Browser"],
             ["memory", "Memory"],
             ["knowledge", "Knowledge"],
+            ["vault", "Vault"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -99,6 +101,7 @@ export function RunContextPanel({
           <BrowserTrailDrawer threadId={threadId} tick={artifactsTick} />
         )}
         {open === "memory" && <MemoryDrawer />}
+        {open === "vault" && <VaultDrawer />}
         {open === "knowledge" && (
           <PanelBlock title="Knowledge" hint="RAG + citations · separate from Memory">
             <p className="text-ph-dim leading-relaxed">
@@ -228,6 +231,55 @@ function MemoryDrawer() {
         )}
       </ul>
       {status ? <p className="mt-2 text-[0.65rem] text-ph-warn">{status}</p> : null}
+    </PanelBlock>
+  );
+}
+
+function VaultDrawer() {
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function onExport() {
+    setBusy(true);
+    setStatus("");
+    try {
+      const res = await exportUserArchive();
+      if (!res.ok) {
+        setStatus(res.error);
+        return;
+      }
+      const blob = new Blob([JSON.stringify(res.archive, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `apostle-export-v1-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus("Downloaded schema v1 archive.");
+    } catch {
+      setStatus("Export failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <PanelBlock title="Vault" hint="Open export · schema v1">
+      <p className="text-ph-dim leading-relaxed">
+        Download projects, threads, messages, memory, prompts, skills, and file metadata as one JSON
+        archive. Your data stays portable across models.
+      </p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void onExport()}
+        className="mt-3 border-2 border-ph-focus px-2 py-1 text-[0.65rem] tracking-wide text-ph-focus uppercase hover:bg-ph-focus hover:text-ph-on disabled:opacity-40"
+      >
+        {busy ? "Building…" : "Export archive"}
+      </button>
+      {status ? <p className="mt-2 text-[0.65rem] text-ph-tool">{status}</p> : null}
     </PanelBlock>
   );
 }

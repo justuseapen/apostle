@@ -10,6 +10,7 @@ export type {
   EntitlementFlags,
   EntitlementsPort,
   ExportArchive,
+  ExportArchivePayload,
   ExportPort,
   GatewayPort,
   GatewayTurnRequest,
@@ -54,3 +55,12 @@ export { getPorts, installAppPorts, setPortsForTests } from "./registry.ts";
 export { createWorkspaceStore } from "./workspace-store.ts";
 export { createMemoryStore } from "./memory-store.ts";
 export { createContextAssembler } from "./context-assembler.ts";
+export { createSkillsStore } from "./skills-store.ts";
+export { createExportStore } from "./export-store.ts";
+export { createLocalAgentRuntime } from "./agent-runtime.ts";
+export {
+  floorFailoverNotice,
+  pickFailoverResult,
+  resolveFloorModelId,
+  resolveModelChain,
+} from "./model-routing.ts";

@@ -262,11 +262,19 @@ export function stubAgentRuntime(): AgentRuntimePort {
         createdAt: nowIso(),
       };
       missions.set(row.id, row);
+      // In-process local path: mark complete immediately so OSS dogfood needs no harness.
+      row.status = "completed";
       return row;
     },
     async getMission(userId, missionId) {
       const row = missions.get(missionId);
       if (!row || row.userId !== userId) return null;
+      return row;
+    },
+    async completeMission(userId, missionId, status = "completed") {
+      const row = missions.get(missionId);
+      if (!row || row.userId !== userId) return null;
+      row.status = status === "failed" ? "failed" : "completed";
       return row;
     },
   };
@@ -313,7 +321,15 @@ export function stubExport(): ExportPort {
         schemaVersion: "1",
         createdAt: nowIso(),
         userId,
-        payload: { projects: [], threads: [], memory: [], prompts: [], skills: [] },
+        payload: {
+          projects: [],
+          threads: [],
+          messages: [],
+          memory: [],
+          prompts: [],
+          skills: [],
+          files: [],
+        },
       };
     },
   };
